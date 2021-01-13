@@ -14,13 +14,11 @@ def get_index():
 
         , "kosdaq_value": html.find("span", {"class": "num", "id": "KOSDAQ_now"}).string
         , "kosdaq_change": html.find("span", {"class": "num_s", "id": "KOSDAQ_change"}).text.split(' ')[0]
-        , "kosdaq_changepc": html.find("span", {"class": "num_s", "id": "KOSDAQ_change"}).text.split(' ')[1].split('%')[
-            0]
+        , "kosdaq_changepc": html.find("span", {"class": "num_s", "id": "KOSDAQ_change"}).text.split(' ')[1].split('%')[0]
 
         , "kpi200_value": html.find("span", {"class": "num", "id": "KPI200_now"}).string
         , "kpi200_change": html.find("span", {"class": "num_s", "id": "KPI200_change"}).text.split(' ')[0]
-        , "kpi200_changepc": html.find("span", {"class": "num_s", "id": "KPI200_change"}).text.split(' ')[1].split('%')[
-            0]
+        , "kpi200_changepc": html.find("span", {"class": "num_s", "id": "KPI200_change"}).text.split(' ')[1].split('%')[0]
                   }
 
     return index_info
