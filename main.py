@@ -8,8 +8,29 @@ import xml.etree.ElementTree as et
 import json
 import FinanceDataReader as fdr
 
-# 주가지수정보 가져오기
-def get_index():
+# 실시간 환율정보 가져오기
+# 데이터 타입: Dictionary
+# 예시: exhcange_info[0][0]: 미국 USD / exhcange_info[0][1]: 1,103.5 / exhcange_info[0][2]: 7.50 / exhcange_info[0][3]: 상승
+def get_main_info_exchange():
+    exchange_info = {}
+    url = "https://finance.naver.com/marketindex/"
+    result = requests.get(url)
+    html = BeautifulSoup(result.content, "html.parser", from_encoding='euc-kr')
+    currency_name = html.select("h3.h_lst > span.blind")
+    currency_value = html.select("span.value")
+    currency_change = html.select("span.change")
+    currency_temp = html.select("span.blind")
+
+    for i in range(0, 4):
+        exchange_info[i] = [currency_name[i].string, currency_value[i].string, currency_change[i].string, currency_temp[i + 2].string]
+
+    return exchange_info
+
+
+# 실시간 주가지수정보 가져오기
+# 데이터 타입: Dictionary
+# 예시: index_info["kospi_value"] ==> 실시간 코스피 지수
+def get_main_info_index():
     url = "https://finance.naver.com/sise/"
     result = requests.get(url)
     html = BeautifulSoup(result.content, "html.parser")
