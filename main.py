@@ -7,6 +7,21 @@ import zipfile
 import xml.etree.ElementTree as et
 import json
 import FinanceDataReader as fdr
+import pandas_datareader.data as web
+
+
+# 주가지수정보 데이터프레임
+def get_main_info_chart():
+    start = datetime.datetime(2020, 10, 1)
+    end = datetime.datetime.now()
+
+    kospi_df = web.DataReader("^KS11", "yahoo", start, end)
+    kosdaq_df = web.DataReader("^KQ11", "yahoo", start, end)
+    kpi200_df = fdr.DataReader('KS200', start, end)  # 코스피200의 경우 fdr.Datareader에서 가져옴
+
+    # 차트그리기 ==> Chart.py 참조
+    return kospi_df, kosdaq_df, kpi200_df
+
 
 # 실시간 환율정보 가져오기
 # 데이터 타입: Dictionary
