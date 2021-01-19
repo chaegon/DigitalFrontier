@@ -193,6 +193,6 @@ if __name__ == '__main__':
     url = "https://finance.naver.com/sise/sise_group_detail.nhn?type=upjong&no=202"
     stocks = get_stocks(url)
     stock_price = get_stocks_price(stocks,'2019-01-01','2020-12-31')
-
+#test
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
