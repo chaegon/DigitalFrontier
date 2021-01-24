@@ -12,6 +12,31 @@ import pandas_datareader.data as web
 import pandas as pd
 
 
+# 실시간 종목코드별 금액 정보 가져오기
+# 파라미터(code): 종목코드  ex) 삼성전자:005390
+def get_stock_realtime_info(code):
+    url = "https://finance.naver.com/item/main.nhn?code="+code
+    result = requests.get(url)
+    html = BeautifulSoup(result.content, "html.parser")
+
+    today_price = html.find("p", {"class": "no_today"}).find("span", {"class": "blind"}).string
+    today_change = html.find("p", {"class": "no_exday"}).find("span", {"class": "blind"}).string
+    today_change_pc = html.find("p", {"class": "no_exday"}).find_all("span", {"class": "blind"})[1].string
+    exday_price = html.find("td", {"class": "first"}).find("span", {"class": "blind"}).string
+    if today_price > exday_price:
+        updown = 'up'
+    else:
+        updown = 'down'
+
+    stock_realtime_info = {
+        "code": code
+        , "today_price": today_price
+        , "today_change": today_change
+        , "today_change_pc": today_change_pc
+        , "updown": updown
+    }
+    return stock_realtime_info
+
 # 차트그리기를 위한 지수별 금액정보 데이터프레임 반환
 # 파라미터(index_name): KOSPI, KOSDAQ, KPI200
 def get_main_info_chart(index_name):

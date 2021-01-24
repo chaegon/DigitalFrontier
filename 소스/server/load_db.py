@@ -7,7 +7,6 @@ import FinanceDataReader as fdr
 # sqlite3 설치 필요
 # sqlite3 설치 및 설정: https://somjang.tistory.com/entry/SQLite3-%EC%84%A4%EC%B9%98%ED%95%98%EA%B8%B0
 # sqlite db browser 설치: https://sqlitebrowser.org/
-# - 수행 시, 프로젝트 폴더에 DIGITALFRONTIER.db 파일 생성 및 테이블 생성
 
 def index_load_initial():
     # 1. 초기적재
@@ -40,9 +39,16 @@ def index_load_initial():
     kosdaq_df.to_sql('DAILY_KOSDAQ_INDEX', conn)
     kpi200_df.to_sql('DAILY_KPI200_INDEX', conn)
 
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    return print("Job Success (index_load_initial)")
+
+
 def index_load_daily():
     # 2. 추가적재
-    #  - 마지막 적재 일로 부터 오늘날짜까지 적
+    #  - 마지막 적재 일로 부터 오늘날짜까지 적재
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
     cur = conn.cursor()
     max_date_query = cur.execute("SELECT MAX(Date) From DAILY_KOSPI_INDEX")
@@ -63,15 +69,22 @@ def index_load_daily():
     kpi200_df.drop("Change", axis=1, inplace=True)
 
     if kospi_df['Date'].max() == start:
-        return
+        return print("No Updates (index_load_daily)")
     else:
         # 테이블 INSERT
         kospi_df.to_sql('DAILY_KOSPI_INDEX', conn, if_exists='append')
         kosdaq_df.to_sql('DAILY_KOSDAQ_INDEX', conn, if_exists='append')
         kpi200_df.to_sql('DAILY_KPI200_INDEX', conn, if_exists='append')
 
+    # commit 및 종료
+    conn.commit()
+    conn.close()
 
-def stocks_load_all():
+    return print("Job Success (index_load_daily)")
+
+
+
+def stock_load_all():
     # 3. 코스피, 코스닥 전체 종목코드 적재
 
     # 한국거래소 홈페이지 크롤링이 막혔기 때문에 csv 파일 업로드로 대체 (2021-01-24)
@@ -96,12 +109,116 @@ def stocks_load_all():
     # 테이블 CREATE 및 INSERT
     code_data.to_sql('CODE_DATA', conn)
 
-    return
+    # commit 및 종료
+    conn.commit()
+    conn.close()
 
-# 초기 적재 수행
-#index_load_initial()
+    return print("Job Success (stock_load_all)")
 
-#일별 수행
-#index_load_daily()
+def stock_price_load_initial():
+    # 4. 전체 종목 가격정보 초기 적재
 
-stocks_load_all()
+    # 전체 종목코드 정보 가져오기
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM CODE_DATA"
+
+    result = cur.execute(query)
+    cols = [column[0] for column in result.description]
+
+    stocks = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+    stock_price = pd.DataFrame()
+
+    # 추출 기간 선택 (2019-01-01 ~ 오늘)
+    start = datetime.datetime(2019, 1, 1)
+    end = datetime.datetime.now()
+
+
+    # 종목별 가격정보 추출
+    for code, name in zip(stocks['code'], stocks['name']):
+        price = fdr.DataReader(code, start, end)
+        price['Code'] = code
+        price['Name'] = name
+
+        price.reset_index(inplace=True)
+        stock_price = pd.concat([stock_price, price], axis=0, ignore_index=True)
+
+    stock_price = stock_price[["Name", "Code", "Date", "Open", "High", "Low", "Close", "Volume", "Change"]]
+    stock_price['Name'] = pd.Series(stock_price['Name'], dtype="string")
+    stock_price['Code'] = pd.Series(stock_price['Code'], dtype="string")
+    stock_price['Code'] = stock_price['Code'].str.zfill(6)
+    stock_price.set_index('Code', inplace=True)
+
+    # DB 생성 (오토 커밋)
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+
+    # 테이블 CREATE 및 INSERT
+    stock_price.to_sql('STOCK_PRICE', conn)
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    return print("Job Success (stock_price_load_initial)")
+
+def stock_price_load_daily():
+    # 5. 전체종목 가격적재 추가 적재
+    #  - 마지막 적재 일로 부터 오늘날짜까지 적재
+
+    # 전체 종목코드 정보 가져오기
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM CODE_DATA"
+
+    result = cur.execute(query)
+    cols = [column[0] for column in result.description]
+
+    stocks = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+    stock_price = pd.DataFrame()
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    # 마지막 적재 날짜 가져오기
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    max_date_query = cur.execute("SELECT MAX(Date) From STOCK_PRICE")
+    max_date = max_date_query.fetchone()
+    start = datetime.datetime(int(max_date[0][0:4]), int(max_date[0][5:7]), int(max_date[0][8:10]))
+    end = datetime.datetime.now()
+
+    # 종목별 가격정보 추출
+    for code, name in zip(stocks['code'], stocks['name']):
+        price = fdr.DataReader(code, start, end)
+        price['Code'] = code
+        price['Name'] = name
+
+        price.reset_index(inplace=True)
+        stock_price = pd.concat([stock_price, price], axis=0, ignore_index=True)
+
+    stock_price = stock_price[["Name", "Code", "Date", "Open", "High", "Low", "Close", "Volume", "Change"]]
+    stock_price['Name'] = pd.Series(stock_price['Name'], dtype="string")
+    stock_price['Code'] = pd.Series(stock_price['Code'], dtype="string")
+    stock_price['Code'] = stock_price['Code'].str.zfill(6)
+    stock_price.set_index('Code', inplace=True)
+
+    if stock_price['Date'].max() == start:
+        return print("No Updates (stock_price_load_daily)")
+    else:
+        # 테이블 INSERT
+        stock_price.to_sql('STOCK_PRICE', conn, if_exists='append')
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    return print("Job Success (stock_price_load_daily)")
+
+
+index_load_initial()
+index_load_daily()
+stock_load_all()
+stock_price_load_initial()
+stock_price_load_daily()
+
