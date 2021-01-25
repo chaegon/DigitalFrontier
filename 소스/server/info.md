@@ -14,15 +14,15 @@ DigitalFrontier
 
 - index_load_initial()
   **** 최초 1회만 수행하면 됩니다.
-  > 코스피, 코스닥, 코스피200 지수정보를 적재하는 기능으로 2014년 01월 01월 부터 수행날까지의 정보를 적재한다.
-  > 적재 테이블: DAILY_KOSPI_INDEX, DAILY_KOSDAQ_INDEX, DAILY_KPI200_INDEX
-  > 테이블 컬럼: Date, High, Low, Open, Close, Volume
+  - 코스피, 코스닥, 코스피200 지수정보를 적재하는 기능으로 2014년 01월 01월 부터 수행날까지의 정보를 적재한다.
+  - 적재 테이블: DAILY_KOSPI_INDEX, DAILY_KOSDAQ_INDEX, DAILY_KPI200_INDEX
+  - 테이블 컬럼: Date, High, Low, Open, Close, Volume
   
   
 - index_load_daily()
-  > 코스피, 코스닥, 코스피200 지수정보를 적재하는 기능으로 index_load_initial()에 적재된 마지막 날짜이후부터 수행날 까지의 정보를 적재한다.
-  > 적재 테이블: DAILY_KOSPI_INDEX, DAILY_KOSDAQ_INDEX, DAILY_KPI200_INDEX
-  > 테이블 컬럼: Date, High, Low, Open, Close, Volume
+  - 코스피, 코스닥, 코스피200 지수정보를 적재하는 기능으로 index_load_initial()에 적재된 마지막 날짜이후부터 수행날 까지의 정보를 적재한다.
+  - 적재 테이블: DAILY_KOSPI_INDEX, DAILY_KOSDAQ_INDEX, DAILY_KPI200_INDEX
+  - 테이블 컬럼: Date, High, Low, Open, Close, Volume
   
   
 - stock_load_all()
