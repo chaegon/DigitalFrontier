@@ -33,7 +33,7 @@ DigitalFrontier
   - 테이블 컬럼: Code, Name
   
 - stock_price_load_initial()
-  * 최초 1회만 수행하시면 됩니다.
+  * 최초 1회만 수행하면 됩니다.
   - 전체 종목에 대한 일별 가격 정보를 2019년 01월 01일부터 수행날까지 적재한다.
   - 적재 테이블: STOCK_PRICE
   - 테이블 컬럼: Name, Code, Date, Open, High, Low, Close, Volume, Change
