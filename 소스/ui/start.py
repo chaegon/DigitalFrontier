@@ -139,6 +139,7 @@ class Fantastic4(QWidget):
         lblTitle.setText(sTabName)
         print('tabMain_on_changed ['+str(nTabIdx)+'] ' + sTabName)
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     myWindow = Fantastic4()
