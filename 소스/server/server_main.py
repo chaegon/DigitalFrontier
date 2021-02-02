@@ -11,6 +11,16 @@ import sqlite3
 import pandas_datareader.data as web
 import pandas as pd
 
+def change_name_to_code(name):
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM CODE_DATA WHERE name = '"+name+"'"
+
+    result = cur.execute(query)
+    code = result.fetchone()[2]
+
+    return code
+
 
 # 실시간 종목코드별 금액 정보 가져오기
 # 파라미터(code): 종목코드  ex) 삼성전자:005390
@@ -219,9 +229,8 @@ def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    url = "https://finance.naver.com/sise/sise_group_detail.nhn?type=upjong&no=202"
-    stocks = get_stocks(url)
-    stock_price = get_stocks_price(stocks,'2019-01-01','2020-12-31')
+    temp = change_name_to_code("삼성전자")
+    print(temp)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
