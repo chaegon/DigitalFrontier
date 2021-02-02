@@ -14,15 +14,15 @@ d_v = 256
 n_heads = 12
 ff_dim = 256
 
-data_path = r'./data/Stock_Price.csv'
-save_path = r'./freezing/'
+data_path = r'../data/Stock_Price.csv'
+save_path = r'../freezing/'
 file_name = 'AIStock.hdf5'
 
-structure_origin = r'./images/structure_origin.png'
-structure_normal = r'./images/structure_normal.png'
-structure_dataset = r'./images/structure_dataset.png'
-structure_pred = r'./images/structure_pred.png'
-structure_model = r'./images/structure_model.png'
+structure_origin = r'../images/structure_origin.png'
+structure_normal = r'../images/structure_normal.png'
+structure_dataset = r'../images/structure_dataset.png'
+structure_pred = r'../images/structure_pred.png'
+structure_model = r'../images/structure_model.png'
 
 
 
@@ -48,9 +48,9 @@ if __name__ == "__main__" :
     # 전처리 및 데이터 split
     # '''
     data = read_data(data_path)
-    # #print(data)
-    # stock = price_mean(data, col)
-    #
+    #print(data)
+    stock = price_mean(data, col)
+
     # visualization(stock, save_path= structure_origin, name='Preprocessing')
     # normal, max_num, min_num, gap = preprocessing(stock)
     # #normal.head()
@@ -60,9 +60,9 @@ if __name__ == "__main__" :
     # train_stock = price_mean(df_train, col, False)
     # vali_stock = price_mean(df_val, col, False)
     # test_stock = price_mean(df_test, col, False)
-    #
-    # # print(train_stock)
-    #
+
+    # print(train_stock)
+
     # visualization_dataset(train_stock,vali_stock, test_stock, save_path= structure_dataset, name = 'splite')
     #
     x_train, y_train = generate_label(train_data, seq_len)
@@ -95,34 +95,34 @@ if __name__ == "__main__" :
     #                     epochs=1,
     #                     callbacks=[callback],
     #                     validation_data=(x_val, y_val))
-
+    #
     model = tf.keras.models.load_model(save_path+file_name,
                                        custom_objects={'Time2Vector': Time2Vector,
                                                        'SingleAttention': SingleAttention,
                                                        'MultiAttention': MultiAttention,
                                                        'TransformerEncoder': TransformerEncoder})
-
+    #
     train_pred = model.predict(x_train)
     val_pred = model.predict(x_val)
     test_pred = model.predict(x_test)
-
-    train_eval = model.evaluate(x_train, y_train, verbose=0)
-    val_eval = model.evaluate(x_val, y_val, verbose=0)
-    test_eval = model.evaluate(x_test, y_test, verbose=0)
-    print(' ')
-    print('Training Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(train_eval[0], train_eval[1], train_eval[2]))
-    print('Validation Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(val_eval[0], val_eval[1], val_eval[2]))
-    print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
-
-    tf.keras.utils.plot_model(
-        model,
-        to_file= structure_model,
-        show_shapes=True,
-        show_layer_names=True,
-        expand_nested=True,
-        dpi=96, )
-
-    visualization_dataset(train_pred, val_pred, test_pred, save_path=structure_pred, name='splite')
+    #
+    # train_eval = model.evaluate(x_train, y_train, verbose=0)
+    # val_eval = model.evaluate(x_val, y_val, verbose=0)
+    # test_eval = model.evaluate(x_test, y_test, verbose=0)
+    # print(' ')
+    # print('Training Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(train_eval[0], train_eval[1], train_eval[2]))
+    # print('Validation Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(val_eval[0], val_eval[1], val_eval[2]))
+    # print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
+    #
+    # tf.keras.utils.plot_model(
+    #     model,
+    #     to_file= structure_model,
+    #     show_shapes=True,
+    #     show_layer_names=True,
+    #     expand_nested=True,
+    #     dpi=96, )
+    #
+    visualization_dataset(train_pred, val_pred, test_pred, save_path=structure_pred, name='pred')
 
 
 
