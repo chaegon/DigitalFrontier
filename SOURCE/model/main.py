@@ -102,9 +102,13 @@ if __name__ == "__main__" :
                                                        'MultiAttention': MultiAttention,
                                                        'TransformerEncoder': TransformerEncoder})
     #
+    print('It starts to predict')
     train_pred = model.predict(x_train)
+    print('It finishes predicting training set')
     val_pred = model.predict(x_val)
+    print('It finishes predicting validation set')
     test_pred = model.predict(x_test)
+    print('It finishes predicting')
     #
     # train_eval = model.evaluate(x_train, y_train, verbose=0)
     # val_eval = model.evaluate(x_val, y_val, verbose=0)
