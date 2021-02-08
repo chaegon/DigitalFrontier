@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QImage
+#from PyQt5.QtCore import QRect
 from PyQt5 import uic
 
 import pandas as pd
@@ -12,7 +13,7 @@ import matplotlib.ticker as ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mplfinance.original_flavor import candlestick2_ohlc
 
-
+from server import kospi
 
 class Fantastic4(QWidget):
     def __init__(self):
@@ -29,13 +30,14 @@ class Fantastic4(QWidget):
         fontTitle.setPointSize(32)
         lblTitle.setFont(fontTitle)
 
-        tab1 = QWidget()
-        tab2 = QWidget()
-        tab3 = QWidget()
+        tab1 = QScrollArea() #QWidget()
+        tab2 = QScrollArea()
+        tab3 = QScrollArea()
 
         global tabMain
         tabMain = QTabWidget()
         tabMain.setTabPosition(QTabWidget.East)
+
         tabMain.addTab(tab1, '시장현황')
         tabMain.addTab(tab2, '관심종목')
         tabMain.addTab(tab3, '추천종목')
@@ -47,12 +49,14 @@ class Fantastic4(QWidget):
         self.setLayout(vboxMain)
 
         lblTitle.setText('시장현황')
-        self.initMarketInfo(tab1)
+        #self.initMarketInfo(tab1)
+        modKospi = kospi.KOSPI()
+        modKospi.drawChartMarketInfo(tab1)
         self.initStocks(tab2)
         self.initSuggests(tab3)
 
         self.setWindowTitle("판타스틱4")
-        self.setGeometry(100, 100, 1000, 800)
+        self.setGeometry(100, 100, 1400, 980)
         self.show()
 
     # tab1
@@ -117,7 +121,29 @@ class Fantastic4(QWidget):
         fntAIintro = lblAIintro.font()
         fntAIintro.setPointSize(16)
         lblAIintro.setFont(fntAIintro)
-        lblAIintro.move(10,10)
+        #lblAIintro.move(10,10)
+
+        #QRect cropper(0, 0, 1000, 400)
+
+        lblImg1 = QLabel('', wgtParent)
+        lblImg1.setPixmap(self.getCroppedPixmap(r'./images/structure_dataset.png'))
+
+        lblImg2 = QLabel('', wgtParent)
+        lblImg2.setPixmap(self.getCroppedPixmap(r'./images/structure_normal.png'))
+
+        lblImg3 = QLabel('', wgtParent)
+        lblImg3.setPixmap(self.getCroppedPixmap(r'./images/structure_origin.png'))
+
+        vbxIndexes = QVBoxLayout(wgtParent)
+        vbxIndexes.addWidget(lblAIintro)
+        vbxIndexes.addWidget(lblImg1)
+        vbxIndexes.addWidget(lblImg2)
+        vbxIndexes.addWidget(lblImg3)
+
+    def getCroppedPixmap(self, sImagePath):
+        imgTarget = QImage(sImagePath)
+        imgCropped = imgTarget.copy(100, 20, 1300, 520)
+        return QPixmap(imgCropped)
 
 
     def changeTab(self, nTabIdx):
