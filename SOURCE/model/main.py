@@ -1,5 +1,7 @@
 from tensorflow.keras.models import *
 from visualization import *
+from datetime import datetime, timedelta
+
 from tools import *
 
 
@@ -57,6 +59,7 @@ if __name__ == "__main__" :
     # visualization(normal, save_path= structure_normal, y_label='Normal Price', name='normal')
     #
     df_train, train_data, df_val, val_data, df_test, test_data = split_dataset(data, col)
+
     # train_stock = price_mean(df_train, col, False)
     # vali_stock = price_mean(df_val, col, False)
     # test_stock = price_mean(df_test, col, False)
@@ -68,6 +71,7 @@ if __name__ == "__main__" :
     x_train, y_train = generate_label(train_data, seq_len)
     x_val, y_val = generate_label(val_data, seq_len)
     x_test, y_test = generate_label(test_data, seq_len)
+
     #
     # # print('Training set shape', x_train.shape, y_train.shape)
     # # print('Validation set shape', x_val.shape, y_val.shape)
@@ -102,14 +106,15 @@ if __name__ == "__main__" :
                                                        'MultiAttention': MultiAttention,
                                                        'TransformerEncoder': TransformerEncoder})
     #
-    print('It starts to predict')
-    train_pred = model.predict(x_train)
-    print('It finishes predicting training set')
-    val_pred = model.predict(x_val)
-    print('It finishes predicting validation set')
-    test_pred = model.predict(x_test)
-    print('It finishes predicting')
-    #
+    # print('It starts to predict')
+    # train_pred = model.predict(x_train)
+    # print('It finishes predicting training set : shape -> ', train_pred.shape)
+    # val_pred = model.predict(x_val)
+    # print('It finishes predicting validation set : shape -> ', val_pred.shape)
+    print('It starts to predict ', y_test.shape)
+    test_pred = model.predict(y_test)
+    print('It finishes predicting shape -> ', test_pred.shape)
+    # #
     # train_eval = model.evaluate(x_train, y_train, verbose=0)
     # val_eval = model.evaluate(x_val, y_val, verbose=0)
     # test_eval = model.evaluate(x_test, y_test, verbose=0)
@@ -126,7 +131,20 @@ if __name__ == "__main__" :
     #     expand_nested=True,
     #     dpi=96, )
     #
-    visualization_dataset(train_pred, val_pred, test_pred, save_path=structure_pred, name='pred')
+
+    # train_pred['Price'] = train_pred
+    # val_pred['Price'] = train_pred
+
+    df_pred_test = pd.DataFrame()
+    df_pred_test['Date'] = pd.DatetimeIndex(df_test['Date'][seq_len:]) + timedelta(days=128)
+    df_pred_test['Price'] = test_pred
+
+    print(df_pred_test)
+    visualization(df_pred_test, save_path= structure_pred, y_label='Prediction Price', name='Predict')
+    #
+    # test_pred.head()
+
+    # visualization_dataset(train_pred, val_pred, test_pred, save_path=structure_pred, name='pred')
 
 
 
