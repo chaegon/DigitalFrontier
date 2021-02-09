@@ -114,8 +114,8 @@ def run(seq_len = 128, number =  'AIStock', learning = True) :
         # print('It finishes predicting training set : shape -> ', train_pred.shape)
         # val_pred = model.predict(x_val)
         # print('It finishes predicting validation set : shape -> ', val_pred.shape)
-        print('It starts to predict ', y_test.shape)
-        test_pred = model.predict(y_test)
+        print('It starts to predict ', x_test.shape)
+        test_pred = model.predict(x_test)
         print('It finishes predicting shape -> ', test_pred.shape)
         # #
         # train_eval = model.evaluate(x_train, y_train, verbose=0)
@@ -141,7 +141,7 @@ def run(seq_len = 128, number =  'AIStock', learning = True) :
         df_pred_test['Date'] = pd.DatetimeIndex(df_test['Date'][seq_len:]) + timedelta(days=seq_len)
         df_pred_test['Price'] = test_pred
 
-        print(df_pred_test)
+        # print(df_pred_test)
         visualization(df_pred_test, save_path=structure_pred, y_label='Prediction Price', name='Predict')
         #
         # test_pred.head()

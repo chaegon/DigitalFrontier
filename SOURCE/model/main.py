@@ -18,7 +18,9 @@ seq_len = 128
 data_path = r'../data/Stock_Price.csv'
 save_path = r'../freezing/'
 # file_name = 'AIStock.hdf5'
-#
+
+data_path = r'../data/076610.csv'
+
 # structure_origin = r'../images/structure_origin.png'
 # structure_normal = r'../images/structure_normal.png'
 # structure_dataset = r'../images/structure_dataset.png'
@@ -48,9 +50,9 @@ if __name__ == "__main__" :
     # # # '''
     # # # 전처리 및 데이터 split
     # # # '''
-    # data = read_data(data_path)
-    # # #print(data)
-    # # stock = price_mean(data, col)
+    data = read_data(data_path, encoding='CP949')
+    data.head()
+    # stock = price_mean(data, col)
     # #
     # # # visualization(stock, save_path= structure_origin, name='Preprocessing')
     # # # normal, max_num, min_num, gap = preprocessing(stock)
@@ -147,7 +149,7 @@ if __name__ == "__main__" :
 
 
 
-    run(number = file_name, learning= True)
+    # run(number = file_name, learning = True)
 
 
 
