@@ -50,8 +50,10 @@ if __name__ == "__main__" :
     # # # '''
     # # # 전처리 및 데이터 split
     # # # '''
-    data = read_data(data_path, encoding='CP949')
+
+    data = read_data(data_path)
     data.head()
+
     # stock = price_mean(data, col)
     # #
     # # # visualization(stock, save_path= structure_origin, name='Preprocessing')
