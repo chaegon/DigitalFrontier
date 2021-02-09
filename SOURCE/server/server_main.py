@@ -13,6 +13,11 @@ import pandas as pd
 
 
 import matplotlib.pyplot as plt
+from matplotlib import rc
+# matplotlib 폰트설정
+rc('font', family='AppleGothic')
+plt.rcParams['axes.unicode_minus'] = False
+
 import matplotlib.ticker as ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mplfinance.original_flavor import candlestick2_ohlc
@@ -31,6 +36,8 @@ def drawchart_stock(code):
     print(stock_df.head(5))
     print(stock_df['Name'].unique()[0])
 
+    temp = 'SAMSUNG'
+
     # 3. 캔들차트
     fig = plt.figure(figsize=(20, 10))
     ax = fig.add_subplot(111)
@@ -40,7 +47,7 @@ def drawchart_stock(code):
     ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
 
     # 그래프 title과 축 이름 지정
-    ax.set_title(print(stock_df['Name'].unique()[0]), fontsize=22)
+    ax.set_title(stock_df['Name'].unique()[0], fontsize=22)
     ax.set_xlabel('Date')
 
     # 캔들차트 그리기
