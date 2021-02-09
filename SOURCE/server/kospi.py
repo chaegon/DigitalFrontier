@@ -13,16 +13,6 @@ from mplfinance.original_flavor import candlestick2_ohlc
 class KOSPI(QWidget):
 
     def drawChartMarketInfo(self, wgtParent):
-        print('시장현황')
-
-        # 지수정보
-        lblIndexes = QLabel('지수정보', wgtParent)
-        fntIndexes = lblIndexes.font()
-        fntIndexes.setPointSize(24)
-        lblIndexes.setFont(fntIndexes)
-        # lblIndexes.setFrameStyle(QFrame.Panel)
-        # lblIndexes.move(10,10)
-
         fig = plt.figure(figsize=(20, 10))
         ax = fig.add_subplot(111)
 
@@ -45,7 +35,6 @@ class KOSPI(QWidget):
         ax.legend()
         canvas = FigureCanvas(fig)
         vbxIndexes = QVBoxLayout(wgtParent)
-        vbxIndexes.addWidget(lblIndexes)
         vbxIndexes.addWidget(canvas)
         canvas.draw()
 

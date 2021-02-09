@@ -2,16 +2,9 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage
 #from PyQt5.QtCore import QRect
-from PyQt5 import uic
+#from PyQt5 import uic
 
-import pandas as pd
-import pandas_datareader.data as web
-import datetime
-
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from mplfinance.original_flavor import candlestick2_ohlc
+#import pandas as pd
 
 from server import kospi
 
@@ -49,9 +42,7 @@ class Fantastic4(QWidget):
         self.setLayout(vboxMain)
 
         lblTitle.setText('시장현황')
-        #self.initMarketInfo(tab1)
-        modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(tab1)
+        self.initMarketInfo(tab1)
         self.initStocks(tab2)
         self.initSuggests(tab3)
 
@@ -71,31 +62,14 @@ class Fantastic4(QWidget):
         # lblIndexes.setFrameStyle(QFrame.Panel)
         # lblIndexes.move(10,10)
 
-        fig = plt.figure(figsize=(20, 10))
-        ax = fig.add_subplot(111)
+        wgtIndexes = QWidget()
 
-        start = datetime.datetime(2020, 10, 1)
-        end = datetime.datetime.now()
-        kospi_df = web.DataReader("^KS11", "yahoo", start, end)
-        index = kospi_df.index.astype('str')  # 캔들스틱 x축이 str로 들어감
-
-        # X축 티커 숫자 20개로 제한
-        ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
-
-        # 그래프 title과 축 이름 지정
-        ax.set_title('KOSPI INDEX', fontsize=22)
-        ax.set_xlabel('Date')
-
-        # 캔들차트 그리기
-        candlestick2_ohlc(ax, kospi_df['Open'], kospi_df['High'],
-                          kospi_df['Low'], kospi_df['Close'],
-                          width=0.5, colorup='r', colordown='b')
-        ax.legend()
-        canvas = FigureCanvas(fig)
         vbxIndexes = QVBoxLayout(wgtParent)
         vbxIndexes.addWidget(lblIndexes)
-        vbxIndexes.addWidget(canvas)
-        canvas.draw()
+        vbxIndexes.addWidget(wgtIndexes)
+
+        modKospi = kospi.KOSPI()
+        modKospi.drawChartMarketInfo(wgtIndexes)
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
