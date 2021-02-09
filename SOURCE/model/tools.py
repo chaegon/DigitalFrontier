@@ -80,6 +80,14 @@ def generate_label(data, seq_len) :
 
     return x_data, y_data
 
+
+def generate_pred_data(data, seq_len) :
+    x_data = []
+    for i in range(seq_len, len(data)):
+        x_data.append(data[i - seq_len :i])
+
+    return x_data
+
 def create_model(d_k, d_v, n_heads, ff_dim, seq_len):
   time_embedding = Time2Vector(seq_len)
   attn_layer1 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
