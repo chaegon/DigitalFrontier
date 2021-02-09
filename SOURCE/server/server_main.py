@@ -11,6 +11,48 @@ import sqlite3
 import pandas_datareader.data as web
 import pandas as pd
 
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from mplfinance.original_flavor import candlestick2_ohlc
+
+def drawchart_stock(code):
+
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM STOCK_PRICE WHERE code = '" + code + "'"
+
+    result = cur.execute(query)
+    cols = [column[0] for column in result.description]
+
+    stock_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+
+    print(stock_df.head(5))
+    print(stock_df['Name'].unique()[0])
+
+    # 3. 캔들차트
+    fig = plt.figure(figsize=(20, 10))
+    ax = fig.add_subplot(111)
+    index = stock_df.index.astype('str')  # 캔들스틱 x축이 str로 들어감
+
+    # X축 티커 숫자 20개로 제한
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
+
+    # 그래프 title과 축 이름 지정
+    ax.set_title(print(stock_df['Name'].unique()[0]), fontsize=22)
+    ax.set_xlabel('Date')
+
+    # 캔들차트 그리기
+    candlestick2_ohlc(ax, stock_df['Open'], stock_df['High'],
+                      stock_df['Low'], stock_df['Close'],
+                      width=0.5, colorup='r', colordown='b')
+    ax.legend()
+    plt.grid()
+    plt.show()
+
+
+
 def change_name_to_code(name):
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
     cur = conn.cursor()
@@ -230,7 +272,17 @@ def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     temp = change_name_to_code("삼성전자")
+    dic = get_stock_realtime_info(temp)
+
     print(temp)
+    print(dic)
+    print("price :" + dic['today_price'])
+    print("change :" + dic['today_change'])
+    print("change_pc :" + dic['today_change_pc'])
+
+    drawchart_stock(temp)
+
+
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
