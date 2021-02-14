@@ -27,7 +27,7 @@ def price_mean(data, col, Date = True) :
     return stock
 
 
-def preprocessing(df) :
+def preprocessing(df, col) :
     '''
     :param col_name: 특정한 컬럼만 Scale하고 싶을 경우 list로 컬럼 이름을 받는다.
     :param decoder:  MinMax Scaler를 다시 원복 시키고 싶을 때 (True, False)
@@ -35,18 +35,23 @@ def preprocessing(df) :
 
     MinMax Scaler를 통해 Nomarlization을 하거나 예측 후 주가를 원복 시키는데 사용한다.
     '''
-    min_price = df['Price'].min()
-    max_price = df['Price'].max()
+
+    print('Index : ' + col)
+    min_price = df[col].min()
+    max_price = df[col].max()
     gap = max_price - min_price
-    normal_price = (df['Price'] - min_price) / (max_price - min_price)
+    normal_price = (df[col] - min_price) / (max_price - min_price)
     normal = pd.DataFrame()
     normal['Date'] = df['Date']
-    normal['Price'] = normal_price.values
+    normal[col] = normal_price.values
     return normal, min_price, max_price, gap
 
 def inverse_preprocessing(price, min_price, gap) :
-    inverse_price = price * gap + min_price
-    return inverse_price
+    result = []
+    for i in range(len(price)) :
+        print(price[i])
+        result.append(price[i] * gap + min_price)
+    return result
 
 
 def split_dataset(df, col) :
@@ -82,11 +87,12 @@ def generate_label(data, seq_len) :
 
 
 def generate_pred_data(data, seq_len) :
+    df = data.values
     x_data = []
-    for i in range(seq_len, len(data)):
-        x_data.append(data[i - seq_len :i])
+    for i in range(len(df) - seq_len, len(df)) :
+        x_data.append(df[i - seq_len : i])
 
-    return x_data
+    return np.array(x_data)
 
 def create_model(d_k, d_v, n_heads, ff_dim, seq_len):
   time_embedding = Time2Vector(seq_len)
