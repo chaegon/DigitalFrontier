@@ -16,10 +16,9 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 # matplotlib 폰트설정
 rc('font', family='AppleGothic')
-plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['axes.unicode_minus'] = False # Window 한글 폰트 설정 방법 필요
 
 import matplotlib.ticker as ticker
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mplfinance.original_flavor import candlestick2_ohlc
 
 def drawchart_stock(code):
@@ -33,15 +32,10 @@ def drawchart_stock(code):
 
     stock_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
 
-    print(stock_df.head(5))
-    print(stock_df['Name'].unique()[0])
-
-    temp = 'SAMSUNG'
-
     # 3. 캔들차트
     fig = plt.figure(figsize=(20, 10))
+    index = stock_df['Date'].astype('str')  # 캔들스틱 x축이 str로 들어감
     ax = fig.add_subplot(111)
-    index = stock_df.index.astype('str')  # 캔들스틱 x축이 str로 들어감
 
     # X축 티커 숫자 20개로 제한
     ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
@@ -57,7 +51,6 @@ def drawchart_stock(code):
     ax.legend()
     plt.grid()
     plt.show()
-
 
 
 def change_name_to_code(name):
@@ -286,6 +279,7 @@ if __name__ == '__main__':
     print("price :" + dic['today_price'])
     print("change :" + dic['today_change'])
     print("change_pc :" + dic['today_change_pc'])
+    print("updown :" + dic['updown'])
 
     drawchart_stock(temp)
 
