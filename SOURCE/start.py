@@ -1,19 +1,23 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage
-#from PyQt5.QtCore import QRect
-#from PyQt5 import uic
+# from PyQt5.QtCore import QRect
+# from PyQt5 import uic
 
-#import pandas as pd
+import pandas as pd
 
 from server import kospi
+
 
 class Fantastic4(QWidget):
     def __init__(self):
         super().__init__()
         self.initBaseUI()
 
-    #def createChartBox(self):
+        global df_code_name
+        df_code_name = pd.read_csv('./data/code-name.csv')
+
+    # def createChartBox(self):
     #    chart = QVBoxLayout(parent=myWindow)
 
     def initBaseUI(self):
@@ -62,14 +66,18 @@ class Fantastic4(QWidget):
         # lblIndexes.setFrameStyle(QFrame.Panel)
         # lblIndexes.move(10,10)
 
-        wgtIndexes = QWidget()
+        wgtIndexes1 = QWidget()
+        wgtIndexes2 = QWidget()
 
         vbxIndexes = QVBoxLayout(wgtParent)
         vbxIndexes.addWidget(lblIndexes)
-        vbxIndexes.addWidget(wgtIndexes)
+        vbxIndexes.addWidget(wgtIndexes1)
+        vbxIndexes.addWidget(wgtIndexes2)
+
 
         modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(wgtIndexes)
+        modKospi.drawChartMarketInfo(wgtIndexes1)
+        modKospi.drawChartMarketInfo(wgtIndexes2)
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
@@ -84,8 +92,31 @@ class Fantastic4(QWidget):
     def initStocks(self, wgtParent):
         print('관심종목')
 
+        global fldKeyword
+        fldKeyword = QLineEdit(wgtParent)
+        fldKeyword.move(60, 20)
+        # fldKeyword.textChanged[str].connect(self.fldKeyword_on_changed)
+
         btnSearch = QPushButton('종목검색', wgtParent)
-        btnSearch.move(800, 10)
+        btnSearch.move(240, 20)
+        btnSearch.clicked.connect(self.btnSearch_on_clicked)
+
+    # def fldKeyword_on_changed(self, sKeyword):
+    def btnSearch_on_clicked(self, checked):
+        sKeyword = fldKeyword.text()
+        print('검색어:'+sKeyword)
+        # print(df_code_name.columns)
+
+        list_search = []
+        for idx, row in df_code_name[['code', 'name']].iterrows():
+            for content in row:
+                if sKeyword.strip() in content:
+                    # print(idx)
+                    list_search.append(df_code_name.loc[idx])
+                    break
+
+        df_search = pd.DataFrame(list_search, columns=df_code_name.columns).reset_index()
+        print(df_search)
 
     # tab3
     def initSuggests(self, wgtParent):
@@ -95,9 +126,9 @@ class Fantastic4(QWidget):
         fntAIintro = lblAIintro.font()
         fntAIintro.setPointSize(16)
         lblAIintro.setFont(fntAIintro)
-        #lblAIintro.move(10,10)
+        # lblAIintro.move(10,10)
 
-        #QRect cropper(0, 0, 1000, 400)
+        # QRect cropper(0, 0, 1000, 400)
 
         lblImg1 = QLabel('', wgtParent)
         lblImg1.setPixmap(self.getCroppedPixmap(r'./images/structure_dataset.png'))
@@ -127,13 +158,13 @@ class Fantastic4(QWidget):
         sTabName = '(탭 이름)'
 
         if nTabIdx == 0:
-            #self.initMarketInfo(tabMain.widget(nTabIdx))
+            # self.initMarketInfo(tabMain.widget(nTabIdx))
             sTabName = '시장현황'
         elif nTabIdx == 1:
-            #self.initStocks(tabMain.widget(nTabIdx))
+            # self.initStocks(tabMain.widget(nTabIdx))
             sTabName = '관심종목'
         elif nTabIdx == 2:
-            #self.initSuggests(tabMain.widget(nTabIdx))
+            # self.initSuggests(tabMain.widget(nTabIdx))
             sTabName = '추천종목'
 
         lblTitle.setText(sTabName)
