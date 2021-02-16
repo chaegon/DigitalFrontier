@@ -12,21 +12,40 @@ from mplfinance.original_flavor import candlestick2_ohlc
 
 class KOSPI(QWidget):
 
-    def drawChartMarketInfo(self, wgtParent):
+    def drawChartMarketInfo(self, wgtParent, index):
         fig = plt.figure(figsize=(20, 10))
         ax = fig.add_subplot(111)
 
         start = datetime.datetime(2020, 10, 1)
         end = datetime.datetime.now()
-        kospi_df = web.DataReader("^KS11", "yahoo", start, end)
-        # index = kospi_df.index.astype('str')  # 캔들스틱 x축이 str로 들어감
+
+        if index == 'KOSPI':
+            target = '^KS11'
+        elif index == 'KOSDAQ':
+            target = '^KQ11'
+
+        kospi_df = web.DataReader(target, "yahoo", start, end)
+
+        day_list = []
+        name_list = []
+        # 'Date' 인덱스를 컬럼으로 변환
+        kospi_df.reset_index(inplace=True)
+
+        for i, day in enumerate(kospi_df.Date):
+            if day.dayofweek == 0:
+                day_list.append(i)
+                name_list.append(day.strftime('%Y-%m-%d') + '(Mon)')
+
+        ax.xaxis.set_major_locator(ticker.FixedLocator(day_list))
+        ax.xaxis.set_major_formatter(ticker.FixedFormatter(name_list))
+        print(kospi_df.head(5))
 
         # X축 티커 숫자 20개로 제한
-        ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
+        ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
 
         # 그래프 title과 축 이름 지정
-        ax.set_title('KOSPI INDEX', fontsize=22)
-        ax.set_xlabel('Date')
+        ax.set_title(index + ' INDEX', fontsize=22)
+        #ax.set_xlabel('Date')
 
         # 캔들차트 그리기
         candlestick2_ohlc(ax, kospi_df['Open'], kospi_df['High'],
@@ -48,6 +67,6 @@ if __name__ == '__main__':
     thisWindow.setGeometry(100, 100, 1400, 920)
     thisWindow.show()
 
-    thisWindow.drawChartMarketInfo(thisWindow)
+    thisWindow.drawChartMarketInfo(thisWindow, 'KOSPI')
 
     sys.exit(app.exec_())
