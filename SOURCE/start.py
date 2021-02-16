@@ -76,8 +76,8 @@ class Fantastic4(QWidget):
 
 
         modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(wgtIndexes1)
-        modKospi.drawChartMarketInfo(wgtIndexes2)
+        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI')
+        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ')
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
