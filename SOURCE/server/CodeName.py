@@ -1,7 +1,8 @@
 
 import pandas as pd
 
-class CodeName():
+
+class SearchCode:
     def __init__(self):
         self.df_code_name = pd.read_csv('../data/code-name.csv')
 
@@ -25,7 +26,7 @@ class CodeName():
 
 
 if __name__ == '__main__':
-    codeName = CodeName()
+    codeName = SearchCode()
     while True:
         sInput = input('검색어를 입력하세요: ')
         codeName.getDataCodeName(sInput)
