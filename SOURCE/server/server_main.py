@@ -11,7 +11,6 @@ import sqlite3
 import pandas_datareader.data as web
 import pandas as pd
 
-
 import matplotlib.pyplot as plt
 from matplotlib import rc
 # matplotlib 폰트설정
@@ -21,6 +20,26 @@ plt.rcParams['axes.unicode_minus'] = False # Window 한글 폰트 설정 방법 
 import matplotlib.ticker as ticker
 from mplfinance.original_flavor import candlestick2_ohlc
 
+# ../data/Stock_Pirce.csv 파일 생성
+def create_stock_price():
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM STOCK_PRICE"
+
+    result = cur.execute(query)
+    cols = [column[0] for column in result.description]
+
+    stock_price_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+    stock_price_df.to_csv('../data/Stock_Price.csv', mode='w', index = None)
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    return print("Job Success (Stock_Price.csv Create)")
+
+
+# 종목코드값 받아서 차트 그리기
 def drawchart_stock(code):
 
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
@@ -52,6 +71,12 @@ def drawchart_stock(code):
     plt.grid()
     plt.show()
 
+    # commit 및 종료
+    conn.commit()
+    conn.close()
+
+    return
+
 
 def change_name_to_code(name):
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
@@ -60,6 +85,10 @@ def change_name_to_code(name):
 
     result = cur.execute(query)
     code = result.fetchone()[2]
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
 
     return code
 
@@ -100,6 +129,10 @@ def get_main_info_chart(index_name):
     cols = [column[0] for column in result.description]
 
     index_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+
+    # commit 및 종료
+    conn.commit()
+    conn.close()
 
     # 차트그리기 ==> Chart.py 참조
     return index_df
@@ -271,19 +304,4 @@ def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    temp = change_name_to_code("삼성전자")
-    dic = get_stock_realtime_info(temp)
-
-    print(temp)
-    print(dic)
-    print("price :" + dic['today_price'])
-    print("change :" + dic['today_change'])
-    print("change_pc :" + dic['today_change_pc'])
-    print("updown :" + dic['updown'])
-
-    drawchart_stock(temp)
-
-
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    create_stock_price()
