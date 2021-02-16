@@ -11,7 +11,7 @@ import sqlite3
 import pandas_datareader.data as web
 import pandas as pd
 
-
+import load_db
 import matplotlib.pyplot as plt
 from matplotlib import rc
 # matplotlib 폰트설정
@@ -21,6 +21,19 @@ plt.rcParams['axes.unicode_minus'] = False # Window 한글 폰트 설정 방법 
 import matplotlib.ticker as ticker
 from mplfinance.original_flavor import candlestick2_ohlc
 
+def create_stock_price():
+    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    cur = conn.cursor()
+    query = "SELECT * FROM STOCK_PRICE"
+
+    result = cur.execute(query)
+    cols = [column[0] for column in result.description]
+
+    stock_price_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+    stock_price_df.to_csv('Stock_Price222.csv', mode='w', inedx = None)
+
+
+# 종목코드값 받아서 차트 그리기
 def drawchart_stock(code):
 
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
@@ -271,19 +284,4 @@ def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    temp = change_name_to_code("삼성전자")
-    dic = get_stock_realtime_info(temp)
-
-    print(temp)
-    print(dic)
-    print("price :" + dic['today_price'])
-    print("change :" + dic['today_change'])
-    print("change_pc :" + dic['today_change_pc'])
-    print("updown :" + dic['updown'])
-
-    drawchart_stock(temp)
-
-
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    create_stock_price()

@@ -129,8 +129,8 @@ def stock_price_load_initial():
     stocks = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
     stock_price = pd.DataFrame()
 
-    # 추출 기간 선택 (2019-01-01 ~ 오늘)
-    start = datetime.datetime(2019, 1, 1)
+    # 추출 기간 선택 (2020-05-01 ~ 오늘)
+    start = datetime.datetime(2020, 5, 1)
     end = datetime.datetime.now()
 
 
@@ -216,9 +216,6 @@ def stock_price_load_daily():
     return print("Job Success (stock_price_load_daily)")
 
 
-index_load_initial()
 index_load_daily()
-stock_load_all()
-stock_price_load_initial()
 stock_price_load_daily()
 
