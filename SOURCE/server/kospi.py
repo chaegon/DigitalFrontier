@@ -9,20 +9,23 @@ import matplotlib.ticker as ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mplfinance.original_flavor import candlestick2_ohlc
 
-
 class KOSPI(QWidget):
 
-    def drawChartMarketInfo(self, wgtParent, index):
+
+    def drawChartMarketInfo(self, wgtParent, index, dic):
+
         fig = plt.figure(figsize=(20, 10))
         ax = fig.add_subplot(111)
 
-        start = datetime.datetime(2020, 10, 1)
         end = datetime.datetime.now()
+        start = end + datetime.timedelta(days=-90)
 
         if index == 'KOSPI':
             target = '^KS11'
+            value =  dic["kospi_value"]
         elif index == 'KOSDAQ':
             target = '^KQ11'
+            value = dic["kosdaq_value"]
 
         kospi_df = web.DataReader(target, "yahoo", start, end)
 
@@ -32,26 +35,24 @@ class KOSPI(QWidget):
         kospi_df.reset_index(inplace=True)
 
         for i, day in enumerate(kospi_df.Date):
-            if day.dayofweek == 0:
+            if day.dayofweek == datetime.datetime.today().weekday():
                 day_list.append(i)
-                name_list.append(day.strftime('%Y-%m-%d') + '(Mon)')
+                name_list.append(day.strftime('%m-%d'))
 
+        # X축 날짜 표시
         ax.xaxis.set_major_locator(ticker.FixedLocator(day_list))
         ax.xaxis.set_major_formatter(ticker.FixedFormatter(name_list))
-        print(kospi_df.head(5))
-
-        # X축 티커 숫자 20개로 제한
-        ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
 
         # 그래프 title과 축 이름 지정
-        ax.set_title(index + ' INDEX', fontsize=22)
-        #ax.set_xlabel('Date')
+        ax.set_title(index + ' INDEX : ' + value, fontsize=22)
+        ax.set_xlabel('Date')
 
         # 캔들차트 그리기
         candlestick2_ohlc(ax, kospi_df['Open'], kospi_df['High'],
                           kospi_df['Low'], kospi_df['Close'],
                           width=0.5, colorup='r', colordown='b')
         ax.legend()
+        ax.grid(True, axis='y', linestyle='--')
         canvas = FigureCanvas(fig)
         vbxIndexes = QVBoxLayout(wgtParent)
         vbxIndexes.addWidget(canvas)

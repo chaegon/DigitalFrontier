@@ -300,8 +300,3 @@ def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
     params = {'crtfc_key':crtfc_key, 'corp_code':corps_str, 'bsns_year':bsns_year,'reprt_code':reprt_code}
     url = "https://opendart.fss.or.kr/api/fnlttMultiAcnt.json"
     return convertFnltt(url,items,item_names,params)
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    create_stock_price()

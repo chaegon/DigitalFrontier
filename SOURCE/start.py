@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPixmap, QImage
 import pandas as pd
 
 from server import kospi
-
+from server import server_main
 
 class Fantastic4(QWidget):
     def __init__(self):
@@ -76,8 +76,8 @@ class Fantastic4(QWidget):
 
 
         modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI')
-        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ')
+        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', server_main.get_main_info_index())
+        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', server_main.get_main_info_index())
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
