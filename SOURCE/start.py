@@ -4,18 +4,17 @@ from PyQt5.QtGui import QPixmap, QImage
 # from PyQt5.QtCore import QRect
 # from PyQt5 import uic
 
-import pandas as pd
+# import pandas as pd
 
+from server import stock_code
 from server import kospi
-from server import server_main
+from server.server_main import *
+
 
 class Fantastic4(QWidget):
     def __init__(self):
         super().__init__()
         self.initBaseUI()
-
-        global df_code_name
-        df_code_name = pd.read_csv('./data/code-name.csv')
 
     # def createChartBox(self):
     #    chart = QVBoxLayout(parent=myWindow)
@@ -76,8 +75,8 @@ class Fantastic4(QWidget):
 
 
         modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', server_main.get_main_info_index())
-        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', server_main.get_main_info_index())
+        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', get_main_info_index())
+        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', get_main_info_index())
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
@@ -104,19 +103,7 @@ class Fantastic4(QWidget):
     # def fldKeyword_on_changed(self, sKeyword):
     def btnSearch_on_clicked(self, checked):
         sKeyword = fldKeyword.text()
-        print('검색어:'+sKeyword)
-        # print(df_code_name.columns)
-
-        list_search = []
-        for idx, row in df_code_name[['code', 'name']].iterrows():
-            for content in row:
-                if sKeyword.strip() in content:
-                    # print(idx)
-                    list_search.append(df_code_name.loc[idx])
-                    break
-
-        df_search = pd.DataFrame(list_search, columns=df_code_name.columns).reset_index()
-        print(df_search)
+        df_code_list = stock_code.getDataCodeName(sKeyword)
 
     # tab3
     def initSuggests(self, wgtParent):
@@ -149,7 +136,6 @@ class Fantastic4(QWidget):
         imgTarget = QImage(sImagePath)
         imgCropped = imgTarget.copy(100, 20, 1300, 520)
         return QPixmap(imgCropped)
-
 
     def changeTab(self, nTabIdx):
         self.tabMain.setCurrentIndex(nTabIdx)
