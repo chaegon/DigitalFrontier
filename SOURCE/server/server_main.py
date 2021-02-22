@@ -41,23 +41,35 @@ def create_stock_price():
 
 # 종목코드값 받아서 차트 그리기
 def drawchart_stock(code):
+    # 차트 시작 일자 설정 (조회일로 부터 90일 전)
+    start = datetime.datetime.now() + datetime.timedelta(days=-90)
 
+    # DB에서 90일치 종목코드에 대한 주가정보 데이터프레임으로 가져오기
     conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
     cur = conn.cursor()
-    query = "SELECT * FROM STOCK_PRICE WHERE code = '" + code + "'"
+    query = "SELECT * FROM STOCK_PRICE WHERE code = '" + code + "' AND Date >= '" + start.strftime('%Y-%m-%d') + "'"
 
     result = cur.execute(query)
     cols = [column[0] for column in result.description]
 
     stock_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
+    stock_df['Date2'] = pd.to_datetime(stock_df['Date'])
 
-    # 3. 캔들차트
+    # 차트 그리기
     fig = plt.figure(figsize=(20, 10))
-    index = stock_df['Date'].astype('str')  # 캔들스틱 x축이 str로 들어감
     ax = fig.add_subplot(111)
 
-    # X축 티커 숫자 20개로 제한
-    ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
+    day_list = []
+    name_list = []
+
+    for i, day in enumerate(stock_df.Date2):
+        if day.dayofweek == datetime.datetime.today().weekday():
+            day_list.append(i)
+            name_list.append(day.strftime('%m-%d'))
+
+    # X축 날짜 표시
+    ax.xaxis.set_major_locator(ticker.FixedLocator(day_list))
+    ax.xaxis.set_major_formatter(ticker.FixedFormatter(name_list))
 
     # 그래프 title과 축 이름 지정
     ax.set_title(stock_df['Name'].unique()[0], fontsize=22)
@@ -68,8 +80,16 @@ def drawchart_stock(code):
                       stock_df['Low'], stock_df['Close'],
                       width=0.5, colorup='r', colordown='b')
     ax.legend()
+    ax.grid(True, axis='x', linestyle='--')
     plt.grid()
     plt.show()
+
+    # 화면 표시
+
+    # canvas = FigureCanvas(fig)
+    # vbxIndexes = QVBoxLayout(wgtParent)
+    # vbxIndexes.addWidget(canvas)
+    # canvas.draw()
 
     # commit 및 종료
     conn.commit()
@@ -95,11 +115,13 @@ def change_name_to_code(name):
 
 # 실시간 종목코드별 금액 정보 가져오기
 # 파라미터(code): 종목코드  ex) 삼성전자:005390
+# return : 종목코드, 종목명, 현재가, 변동가, 변동률, 등
 def get_stock_realtime_info(code):
     url = "https://finance.naver.com/item/main.nhn?code="+code
     result = requests.get(url)
     html = BeautifulSoup(result.content, "html.parser")
 
+    name = html.find("title").string.split(':')[0].strip()
     today_price = html.find("p", {"class": "no_today"}).find("span", {"class": "blind"}).string
     today_change = html.find("p", {"class": "no_exday"}).find("span", {"class": "blind"}).string
     today_change_pc = html.find("p", {"class": "no_exday"}).find_all("span", {"class": "blind"})[1].string
@@ -111,6 +133,7 @@ def get_stock_realtime_info(code):
 
     stock_realtime_info = {
         "code": code
+        , "name": name
         , "today_price": today_price
         , "today_change": today_change
         , "today_change_pc": today_change_pc
