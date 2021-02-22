@@ -1,14 +1,15 @@
 import sys
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage
 # from PyQt5.QtCore import QRect
 # from PyQt5 import uic
 
-# import pandas as pd
-
 from server import stock_code
 from server import kospi
-from server.server_main import *
+from server import server_main
+
+import pandas as pd
 
 
 class Fantastic4(QWidget):
@@ -20,8 +21,9 @@ class Fantastic4(QWidget):
     #    chart = QVBoxLayout(parent=myWindow)
 
     def initBaseUI(self):
-        global lblTitle
+
         lblTitle = QLabel('현재 탭 이름', self)
+        lblTitle.setObjectName('currentTitle')
         fontTitle = lblTitle.font()
         fontTitle.setPointSize(32)
         lblTitle.setFont(fontTitle)
@@ -30,9 +32,9 @@ class Fantastic4(QWidget):
         tab2 = QScrollArea()
         tab3 = QScrollArea()
 
-        global tabMain
         tabMain = QTabWidget()
-        tabMain.setTabPosition(QTabWidget.East)
+        tabMain.setObjectName('tabMain')
+        tabMain.setTabPosition(QTabWidget.North)
 
         tabMain.addTab(tab1, '시장현황')
         tabMain.addTab(tab2, '관심종목')
@@ -75,8 +77,8 @@ class Fantastic4(QWidget):
 
 
         modKospi = kospi.KOSPI()
-        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', get_main_info_index())
-        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', get_main_info_index())
+        modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', server_main.get_main_info_index())
+        modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', server_main.get_main_info_index())
 
         # 환율정보
         # lblExchanges = QLabel('환율정보', wgtParent)
@@ -90,20 +92,71 @@ class Fantastic4(QWidget):
     # tab2
     def initStocks(self, wgtParent):
         print('관심종목')
+        grid = QGridLayout()
 
-        global fldKeyword
         fldKeyword = QLineEdit(wgtParent)
-        fldKeyword.move(60, 20)
+        fldKeyword.setObjectName('keyword')
+        grid.addWidget(fldKeyword,0,0)
+        # fldKeyword.move(60, 20)
         # fldKeyword.textChanged[str].connect(self.fldKeyword_on_changed)
 
         btnSearch = QPushButton('종목검색', wgtParent)
-        btnSearch.move(240, 20)
+        grid.addWidget(btnSearch,0,1)
+        # btnSearch.move(240, 20)
         btnSearch.clicked.connect(self.btnSearch_on_clicked)
+
+        gboxStockInfoList = QGroupBox('종목검색결과')
+        gboxStockInfoList.setObjectName('gboxStockInfoList')
+        grid.addWidget(gboxStockInfoList,1,0)
+
+        wgtParent.setLayout(grid)
+
+    # draw stock information line from dataframe on target widget (not chart)
+    def drawStockInfo(self, dict_stock_info):
+        print('drawStockInfo')
+        print(dict_stock_info)
+
+        hbox = QHBoxLayout()
+        for key, value in dict_stock_info.items():
+            hbox.addWidget(QLabel(value))
+        # wgtParent.setLayout(hbox)
+        return hbox
 
     # def fldKeyword_on_changed(self, sKeyword):
     def btnSearch_on_clicked(self, checked):
+        gbox = self.findChild(QGroupBox, 'gboxStockInfoList')
+
+        # find vbox previous defined
+        vbox = self.findChild(QVBoxLayout, 'vboxStockInfoList')
+        if vbox is None:
+            # init vbox
+            vbox = QVBoxLayout()
+            vbox.setObjectName('vboxStockInfoList')
+        else:
+            # delete child widgets
+            for i in reversed(range(vbox.count())):
+                # vbox.itemAt(i).widget().deleteLater()
+                vbox.itemAt(i).widget().setParent(None)
+
+        fldKeyword = self.findChild(QLineEdit, 'keyword')
         sKeyword = fldKeyword.text()
         df_code_list = stock_code.getDataCodeName(sKeyword)
+        bool_do_layout = False
+        for code in df_code_list['code']:
+            print(code)
+            dict_stock_info = server_main.get_stock_realtime_info(code)
+            # df_stock_info = pd.DataFrame([dict_stock_info])
+            # print(dict_stock_info)
+            hbox = self.drawStockInfo(dict_stock_info)
+            print('addWidget')
+            wgt_new_stock_info = QWidget()
+            wgt_new_stock_info.setLayout(hbox)
+            vbox.addWidget(wgt_new_stock_info)
+            bool_do_layout = True
+
+        if bool_do_layout is True:
+            # vbox.addStretch(1)  # 여백
+            gbox.setLayout(vbox)
 
     # tab3
     def initSuggests(self, wgtParent):
@@ -143,6 +196,7 @@ class Fantastic4(QWidget):
     def tabMain_on_changed(self, nTabIdx):
         sTabName = '(탭 이름)'
 
+        # self.findChild(QTabWidget, 'tabMain')
         if nTabIdx == 0:
             # self.initMarketInfo(tabMain.widget(nTabIdx))
             sTabName = '시장현황'
@@ -153,6 +207,7 @@ class Fantastic4(QWidget):
             # self.initSuggests(tabMain.widget(nTabIdx))
             sTabName = '추천종목'
 
+        lblTitle = self.findChild(QLabel, 'currentTitle')
         lblTitle.setText(sTabName)
         print('tabMain_on_changed ['+str(nTabIdx)+'] ' + sTabName)
 
