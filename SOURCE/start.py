@@ -1,7 +1,8 @@
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtGui import QPixmap, QImage, QCursor
 # from PyQt5.QtCore import QRect
 # from PyQt5 import uic
 
@@ -75,7 +76,6 @@ class Fantastic4(QWidget):
         vbxIndexes.addWidget(wgtIndexes1)
         vbxIndexes.addWidget(wgtIndexes2)
 
-
         modKospi = kospi.KOSPI()
         modKospi.drawChartMarketInfo(wgtIndexes1, 'KOSPI', server_main.get_main_info_index())
         modKospi.drawChartMarketInfo(wgtIndexes2, 'KOSDAQ', server_main.get_main_info_index())
@@ -112,15 +112,19 @@ class Fantastic4(QWidget):
         wgtParent.setLayout(grid)
 
     # draw stock information line from dataframe on target widget (not chart)
-    def drawStockInfo(self, dict_stock_info):
-        print('drawStockInfo')
+    def drawStockInfo (self, dict_stock_info, wgtParent):
         print(dict_stock_info)
 
         hbox = QHBoxLayout()
         for key, value in dict_stock_info.items():
-            hbox.addWidget(QLabel(value))
-        # wgtParent.setLayout(hbox)
+            lblNew = QLabel(value)
+            hbox.addWidget(lblNew)
+        wgtParent.setLayout(hbox)
         return hbox
+
+    # stock info click event
+    def stock_info_on_click (self, stock_code):
+        print(stock_code)
 
     # def fldKeyword_on_changed(self, sKeyword):
     def btnSearch_on_clicked(self, checked):
@@ -147,10 +151,14 @@ class Fantastic4(QWidget):
             dict_stock_info = server_main.get_stock_realtime_info(code)
             # df_stock_info = pd.DataFrame([dict_stock_info])
             # print(dict_stock_info)
-            hbox = self.drawStockInfo(dict_stock_info)
-            print('addWidget')
-            wgt_new_stock_info = QWidget()
-            wgt_new_stock_info.setLayout(hbox)
+            wgt_new_stock_info = QPushButton()
+            # wgt_new_stock_info.stock_code = code
+            wgt_new_stock_info.setFixedHeight(40)
+            self.drawStockInfo(dict_stock_info, wgt_new_stock_info)
+
+            ### TODO! *** button clicked signal should set 'code' parameter each button ***
+            wgt_new_stock_info.clicked.connect(lambda: self.stock_info_on_click(code))
+            wgt_new_stock_info.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
             vbox.addWidget(wgt_new_stock_info)
             bool_do_layout = True
 
@@ -158,11 +166,14 @@ class Fantastic4(QWidget):
             # vbox.addStretch(1)  # 여백
             gbox.setLayout(vbox)
 
+        print('\n>> end draw stock info list\n')
+
     # tab3
     def initSuggests(self, wgtParent):
         print('추천종목')
 
-        lblAIintro = QLabel('AI가 추천하는 투자 종목', wgtParent)
+        lblAIintro = QLabel('종목 검색 후 선택하세요', wgtParent)
+        # lblAIintro = QLabel('AI가 추천하는 투자 종목', wgtParent)
         fntAIintro = lblAIintro.font()
         fntAIintro.setPointSize(16)
         lblAIintro.setFont(fntAIintro)
@@ -170,20 +181,20 @@ class Fantastic4(QWidget):
 
         # QRect cropper(0, 0, 1000, 400)
 
-        lblImg1 = QLabel('', wgtParent)
-        lblImg1.setPixmap(self.getCroppedPixmap(r'./images/structure_dataset.png'))
-
-        lblImg2 = QLabel('', wgtParent)
-        lblImg2.setPixmap(self.getCroppedPixmap(r'./images/structure_normal.png'))
-
-        lblImg3 = QLabel('', wgtParent)
-        lblImg3.setPixmap(self.getCroppedPixmap(r'./images/structure_origin.png'))
-
-        vbxIndexes = QVBoxLayout(wgtParent)
-        vbxIndexes.addWidget(lblAIintro)
-        vbxIndexes.addWidget(lblImg1)
-        vbxIndexes.addWidget(lblImg2)
-        vbxIndexes.addWidget(lblImg3)
+        # lblImg1 = QLabel('', wgtParent)
+        # lblImg1.setPixmap(self.getCroppedPixmap(r'./images/structure_dataset.png'))
+        #
+        # lblImg2 = QLabel('', wgtParent)
+        # lblImg2.setPixmap(self.getCroppedPixmap(r'./images/structure_normal.png'))
+        #
+        # lblImg3 = QLabel('', wgtParent)
+        # lblImg3.setPixmap(self.getCroppedPixmap(r'./images/structure_origin.png'))
+        #
+        # vbxIndexes = QVBoxLayout(wgtParent)
+        # vbxIndexes.addWidget(lblAIintro)
+        # vbxIndexes.addWidget(lblImg1)
+        # vbxIndexes.addWidget(lblImg2)
+        # vbxIndexes.addWidget(lblImg3)
 
     def getCroppedPixmap(self, sImagePath):
         imgTarget = QImage(sImagePath)

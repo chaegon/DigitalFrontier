@@ -9,8 +9,8 @@ import matplotlib.ticker as ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mplfinance.original_flavor import candlestick2_ohlc
 
-class KOSPI(QWidget):
 
+class KOSPI(QWidget):
 
     def drawChartMarketInfo(self, wgtParent, index, dic):
 
