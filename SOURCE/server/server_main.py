@@ -11,18 +11,35 @@ import sqlite3
 import pandas_datareader.data as web
 import pandas as pd
 
+from PyQt5.QtWidgets import QLabel, QVBoxLayout
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from os import path
+
 import matplotlib.pyplot as plt
-from matplotlib import rc
+from matplotlib import rc, font_manager
+
+import platform
 # matplotlib 폰트설정
-rc('font', family='AppleGothic')
-plt.rcParams['axes.unicode_minus'] = False # Window 한글 폰트 설정 방법 필요
+if platform.system() == 'Darwin':  # macOS
+    rc('font', family='AppleGothic')
+    plt.rcParams['axes.unicode_minus'] = False  # Window 한글 폰트 설정 방법 필요
+elif platform.system() == 'Windows':
+    font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+    rc('font', family=font_name)
 
 import matplotlib.ticker as ticker
 from mplfinance.original_flavor import candlestick2_ohlc
 
+dbpath = './server/DIGITALFRONTIER.db'
+dirpath = './'
+if __name__ == '__main__':
+    dbpath = './DIGITALFRONTIER.db'
+    dirpath = '../'
+
+
 # ../data/Stock_Pirce.csv 파일 생성
 def create_stock_price():
-    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
     query = "SELECT * FROM STOCK_PRICE"
 
@@ -40,12 +57,13 @@ def create_stock_price():
 
 
 # 종목코드값 받아서 차트 그리기
-def drawchart_stock(code):
+def drawchart_stock(code, wgtParent):
     # 차트 시작 일자 설정 (조회일로 부터 90일 전)
     start = datetime.datetime.now() + datetime.timedelta(days=-90)
 
     # DB에서 90일치 종목코드에 대한 주가정보 데이터프레임으로 가져오기
-    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+
+    conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
     query = "SELECT * FROM STOCK_PRICE WHERE code = '" + code + "' AND Date >= '" + start.strftime('%Y-%m-%d') + "'"
 
@@ -82,7 +100,14 @@ def drawchart_stock(code):
     ax.legend()
     ax.grid(True, axis='x', linestyle='--')
     plt.grid()
-    plt.show()
+
+    if __name__ == '__main__':
+        plt.show()
+    else:
+        canvas = FigureCanvas(fig)
+        vbxIndexes = QVBoxLayout(wgtParent)
+        vbxIndexes.addWidget(canvas)
+        canvas.draw()
 
     # 화면 표시
 
@@ -98,8 +123,39 @@ def drawchart_stock(code):
     return
 
 
+# 종목 예측 차트 그리기
+def drawStockPredict(code, wgtParent):
+    str_pred_file_path = dirpath + 'data/' + code + '_pred.csv'
+    if path.isfile(str_pred_file_path) is True:
+        print('>> Prediction file: ' + str_pred_file_path)
+    else:
+        QLabel('예측 정보가 존재하지 않습니다.', wgtParent)
+        return
+
+    df_pred = pd.read_csv(str_pred_file_path, names=['index','date','price'], header=0)
+    print(df_pred)
+
+    # 차트 그리기
+    fig = plt.figure(figsize=(18, 10))
+    # ax = fig.add_subplot(111)
+
+    plt.ylabel('주가')
+    plt.xlabel('일자')
+
+    plt.plot(df_pred['date'], df_pred['price'])
+    plt.grid()
+
+    if __name__ == '__main__':
+        plt.show()
+    else:
+        canvas = FigureCanvas(fig)
+        vbxIndexes = QVBoxLayout(wgtParent)
+        vbxIndexes.addWidget(canvas)
+        canvas.draw()
+
+
 def change_name_to_code(name):
-    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
     query = "SELECT * FROM CODE_DATA WHERE name = '"+name+"'"
 
@@ -141,10 +197,11 @@ def get_stock_realtime_info(code):
     }
     return stock_realtime_info
 
+
 # 차트그리기를 위한 지수별 금액정보 데이터프레임 반환
 # 파라미터(index_name): KOSPI, KOSDAQ, KPI200
 def get_main_info_chart(index_name):
-    conn = sqlite3.connect("DIGITALFRONTIER.db", isolation_level=None)
+    conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
     query = "SELECT * FROM DAILY_"+index_name+"_INDEX"
 
@@ -159,6 +216,7 @@ def get_main_info_chart(index_name):
 
     # 차트그리기 ==> Chart.py 참조
     return index_df
+
 
 # 실시간 환율정보 가져오기
 # 데이터 타입: Dictionary
@@ -202,6 +260,7 @@ def get_main_info_index():
 
     return index_info
 
+
 # 네이버 증권 url 업종별 종목코드 가져오기
 def get_stocks(url):
     stocks = pd.DataFrame()
@@ -225,6 +284,7 @@ def get_stocks(url):
 
     return stocks
 
+
 # 종목코드에 대한 기간별 가격정보 가져오기
 def get_stocks_price(stocks,starts_date,end_date):
     stock_price = pd.DataFrame()
@@ -245,6 +305,7 @@ def get_stocks_price(stocks,starts_date,end_date):
     stock_price.set_index('Code', inplace=True)
 
     return stock_price
+
 
 def get_corpcode(crtfc_key):
     """ OpenDART 기업 고유번호 받아오기 return 값: 주식코드를 가진 업체의 DataFrame """
@@ -309,6 +370,7 @@ def get_fnlttSinglAcntAll(crtfc_key, corp_code, bsns_year, reprt_code, fs_div = 
     params = {'crtfc_key':crtfc_key, 'corp_code':corp_code, 'bsns_year':bsns_year, 'reprt_code':reprt_code, 'fs_div':fs_div}
     url = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?"
     return convertFnltt(url,items,item_names,params)
+
 
 # 다중회사 주요계정
 def get_fnlttMultiAcnt(crtfc_key, corp_code, bsns_year, reprt_code):
