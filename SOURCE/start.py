@@ -10,7 +10,8 @@ from server import stock_code
 from server import kospi
 from server import server_main
 
-import pandas as pd
+# import pandas as pd
+from functools import partial
 
 
 class Fantastic4(QWidget):
@@ -31,15 +32,19 @@ class Fantastic4(QWidget):
 
         tab1 = QScrollArea() #QWidget()
         tab2 = QScrollArea()
-        tab3 = QScrollArea()
+        tab3 = QWidget()
+
+        tab1.setObjectName('tab1')
+        tab2.setObjectName('tab2')
+        tab3.setObjectName('tab3')
 
         tabMain = QTabWidget()
         tabMain.setObjectName('tabMain')
         tabMain.setTabPosition(QTabWidget.North)
 
         tabMain.addTab(tab1, '시장현황')
-        tabMain.addTab(tab2, '관심종목')
-        tabMain.addTab(tab3, '추천종목')
+        tabMain.addTab(tab2, '종목검색')
+        tabMain.addTab(tab3, '종목현황')
         tabMain.currentChanged.connect(self.tabMain_on_changed)
 
         vboxMain = QVBoxLayout()
@@ -52,8 +57,8 @@ class Fantastic4(QWidget):
         self.initStocks(tab2)
         self.initSuggests(tab3)
 
-        self.setWindowTitle("판타스틱4")
-        self.setGeometry(100, 100, 1400, 980)
+        self.setWindowTitle('판타스틱4')
+        self.setGeometry(100, 100, 800, 980)
         self.show()
 
     # tab1
@@ -91,7 +96,7 @@ class Fantastic4(QWidget):
 
     # tab2
     def initStocks(self, wgtParent):
-        print('관심종목')
+        print('종목검색')
         grid = QGridLayout()
 
         fldKeyword = QLineEdit(wgtParent)
@@ -100,7 +105,7 @@ class Fantastic4(QWidget):
         # fldKeyword.move(60, 20)
         # fldKeyword.textChanged[str].connect(self.fldKeyword_on_changed)
 
-        btnSearch = QPushButton('종목검색', wgtParent)
+        btnSearch = QPushButton('검색', wgtParent)
         grid.addWidget(btnSearch,0,1)
         # btnSearch.move(240, 20)
         btnSearch.clicked.connect(self.btnSearch_on_clicked)
@@ -112,19 +117,68 @@ class Fantastic4(QWidget):
         wgtParent.setLayout(grid)
 
     # draw stock information line from dataframe on target widget (not chart)
-    def drawStockInfo (self, dict_stock_info, wgtParent):
+    def drawStockInfoButton (self, dict_stock_info, wgtParent):
         print(dict_stock_info)
 
+        style = 'font: 16px "Malgun Gothic";'
+        style_debug = ''  # 'background-color: #87CEFA;'
+
+        updown = '- '
+        updown_pc = ' '
+        style_color = 'color: black;'
+        if dict_stock_info['updown'] == 'up':
+            updown = '▲ '
+            updown_pc = '+ '
+            style_color = 'color: red;'
+        elif dict_stock_info['updown'] == 'down':
+            updown = '▼ '
+            updown_pc = '- '
+            style_color = 'color: blue;'
+
         hbox = QHBoxLayout()
-        for key, value in dict_stock_info.items():
-            lblNew = QLabel(value)
-            hbox.addWidget(lblNew)
+
+        lblCode = QLabel(dict_stock_info['code'])
+        lblCode.setFixedWidth(80)
+        lblCode.setStyleSheet(style_debug + style + 'padding-left: 20;')
+        hbox.addWidget(lblCode)
+
+        lblName = QLabel(dict_stock_info['name'])
+        lblName.setFixedWidth(240)
+        lblName.setStyleSheet(style_debug + 'font: 24px "Malgun Gothic"; font-weight: bold;')
+        hbox.addWidget(lblName)
+
+        lblPrice = QLabel(dict_stock_info['today_price'])
+        lblPrice.setFixedWidth(200)
+        lblPrice.setStyleSheet(style_debug + 'font: 24px "Malgun Gothic";' + style_color)
+        lblPrice.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(lblPrice)
+
+        # lblUpDown = QLabel(updown)
+        # lblUpDown.setFixedWidth(20)
+        # lblUpDown.setStyleSheet(style_debug + style + style_color)
+        # lblUpDown.setAlignment(QtCore.Qt.AlignRight)
+        # hbox.addWidget(lblUpDown)
+
+        str_today_change = updown + dict_stock_info['today_change']  # + '   ' + updown_pc + dict_stock_info['today_change_pc']+' %'
+        lblChange = QLabel(str_today_change)
+        lblChange.setFixedWidth(160)
+        lblChange.setStyleSheet(style_debug + 'font: 18px "Malgun Gothic";' + style_color)
+        lblChange.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(lblChange)
+
+        lblChangePer = QLabel(updown_pc + dict_stock_info['today_change_pc']+' %')
+        lblChangePer.setFixedWidth(100)
+        lblChangePer.setStyleSheet(style_debug + style + style_color)
+        lblChangePer.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(lblChangePer)
+
         wgtParent.setLayout(hbox)
         return hbox
 
     # stock info click event
     def stock_info_on_click (self, stock_code):
-        print(stock_code)
+        self.changeTab(2)
+        self.drawStockInfoSheet(stock_code)
 
     # def fldKeyword_on_changed(self, sKeyword):
     def btnSearch_on_clicked(self, checked):
@@ -145,39 +199,46 @@ class Fantastic4(QWidget):
         fldKeyword = self.findChild(QLineEdit, 'keyword')
         sKeyword = fldKeyword.text()
         df_code_list = stock_code.getDataCodeName(sKeyword)
-        bool_do_layout = False
-        for code in df_code_list['code']:
-            print(code)
-            dict_stock_info = server_main.get_stock_realtime_info(code)
-            # df_stock_info = pd.DataFrame([dict_stock_info])
-            # print(dict_stock_info)
+
+        # for code in df_code_list['code']:
+        for idx in range(0,12):  # count of button to create include empty
+            code = 'empty'
             wgt_new_stock_info = QPushButton()
-            # wgt_new_stock_info.stock_code = code
-            wgt_new_stock_info.setFixedHeight(40)
-            self.drawStockInfo(dict_stock_info, wgt_new_stock_info)
+            wgt_new_stock_info.setFixedHeight(60)
 
-            ### TODO! *** button clicked signal should set 'code' parameter each button ***
-            wgt_new_stock_info.clicked.connect(lambda: self.stock_info_on_click(code))
-            wgt_new_stock_info.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+            if idx < len(df_code_list['code']):
+                code = df_code_list['code'][idx]
+                print(code)
+                dict_stock_info = server_main.get_stock_realtime_info(code)
+                # df_stock_info = pd.DataFrame([dict_stock_info])
+                # print(dict_stock_info)
+                self.drawStockInfoButton(dict_stock_info, wgt_new_stock_info)
+                # button clicked signal should set 'code' parameter each button
+                wgt_new_stock_info.clicked.connect(partial(self.stock_info_on_click, code))
+                wgt_new_stock_info.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
             vbox.addWidget(wgt_new_stock_info)
-            bool_do_layout = True
 
-        if bool_do_layout is True:
-            # vbox.addStretch(1)  # 여백
-            gbox.setLayout(vbox)
+        if len(df_code_list['code']) > 12 :
+            lblCodeListMore = QLabel('검색 결과는 최대 12개까지만 표시됩니다.')
+            vbox.addWidget(lblCodeListMore)
 
+        gbox.setLayout(vbox)
         print('\n>> end draw stock info list\n')
 
     # tab3
     def initSuggests(self, wgtParent):
-        print('추천종목')
+        print('종목현황')
 
         lblAIintro = QLabel('종목 검색 후 선택하세요', wgtParent)
         # lblAIintro = QLabel('AI가 추천하는 투자 종목', wgtParent)
         fntAIintro = lblAIintro.font()
         fntAIintro.setPointSize(16)
         lblAIintro.setFont(fntAIintro)
-        # lblAIintro.move(10,10)
+        lblAIintro.move(10,10)
+
+        ### test
+        # self.changeTab(2)
+        # self.drawStockInfoSheet('195870')
 
         # QRect cropper(0, 0, 1000, 400)
 
@@ -196,13 +257,46 @@ class Fantastic4(QWidget):
         # vbxIndexes.addWidget(lblImg2)
         # vbxIndexes.addWidget(lblImg3)
 
+    # blah
+    def drawStockInfoSheet(self, code):
+        print('>> drawStockInfoSheet ' + code)
+
+        tab3 = self.findChild(QWidget, 'tab3')
+        for child in tab3.children():
+            child.setParent(None)
+
+        dict_stock_info = server_main.get_stock_realtime_info(code)
+        print(dict_stock_info)
+
+        wgtStockInfo = QWidget()
+        self.drawStockInfoButton(dict_stock_info, wgtStockInfo)
+
+        wgtStockChart = QWidget()
+        server_main.drawchart_stock(code, wgtStockChart)
+
+        wgtStockPredict = QWidget()
+        server_main.drawStockPredict(code, wgtStockPredict)
+
+        grid = QGridLayout()
+        tab3.setLayout(grid)
+
+        grid.addWidget(QLabel('종목'), 0, 0)
+        grid.addWidget(QLabel('차트'), 1, 0)
+        grid.addWidget(QLabel('향후 6개월 예측'), 2, 0)
+
+        grid.addWidget(wgtStockInfo, 0, 1)
+        grid.addWidget(wgtStockChart, 1, 1)
+        grid.addWidget(wgtStockPredict, 2, 1)
+
+    # resize image
     def getCroppedPixmap(self, sImagePath):
         imgTarget = QImage(sImagePath)
         imgCropped = imgTarget.copy(100, 20, 1300, 520)
         return QPixmap(imgCropped)
 
     def changeTab(self, nTabIdx):
-        self.tabMain.setCurrentIndex(nTabIdx)
+        tabMain = self.findChild(QTabWidget, 'tabMain')
+        tabMain.setCurrentIndex(nTabIdx)
 
     def tabMain_on_changed(self, nTabIdx):
         sTabName = '(탭 이름)'
@@ -213,10 +307,10 @@ class Fantastic4(QWidget):
             sTabName = '시장현황'
         elif nTabIdx == 1:
             # self.initStocks(tabMain.widget(nTabIdx))
-            sTabName = '관심종목'
+            sTabName = '종목검색'
         elif nTabIdx == 2:
             # self.initSuggests(tabMain.widget(nTabIdx))
-            sTabName = '추천종목'
+            sTabName = '종목현황'
 
         lblTitle = self.findChild(QLabel, 'currentTitle')
         lblTitle.setText(sTabName)
