@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 # 076610
 
+
 def run(seq_len = 1, number =  'AIStock', learning = True) :
     batch_size = 1
 
@@ -17,9 +18,9 @@ def run(seq_len = 1, number =  'AIStock', learning = True) :
     n_heads = 12
     ff_dim = 256
 
-    data_path = r'../data/' + number + '.csv'
-    pred_path = r'../data/' + number + '_pred.csv'
-    normal_path = r'../data/' + number + '_normal.csv'
+    data_path = r'../data/stock_price/' + number + '.csv'
+    pred_path = r'../data/predict/' + number + '_pred.csv'
+    normal_path = r'../data/normal/' + number + '_normal.csv'
 
     save_path = r'../freezing/' + number + '.hdf5'
 
@@ -65,6 +66,10 @@ def run(seq_len = 1, number =  'AIStock', learning = True) :
     test_set = generate_pred_data(normal[col], seq_len)
     print(test_set.shape)
     if learning :
+
+        # my_devices = tf.config.experimental.list_physical_devices(device_type='CPU')
+        # tf.config.experimental.set_visible_devices(devices=my_devices, device_type='CPU')
+
         normal.to_csv(normal_path)
         #
         # '''
