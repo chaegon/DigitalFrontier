@@ -58,7 +58,7 @@ class Fantastic4(QWidget):
         self.initSuggests(tab3)
 
         self.setWindowTitle('판타스틱4')
-        self.setGeometry(100, 100, 800, 980)
+        self.setGeometry(10, 50, 1000, 980)
         self.show()
 
     # tab1
@@ -173,17 +173,18 @@ class Fantastic4(QWidget):
         hbox.addWidget(lblChangePer)
 
         wgtParent.setLayout(hbox)
+        wgtParent.setFixedHeight(80)
         return hbox
 
     # stock info click event
-    def stock_info_on_click (self, stock_code):
-        self.changeTab(2)
-        self.drawStockInfoSheet(stock_code)
+    def stock_info_on_click (self, code):
+        # create price csv file
+        # server_main.create_stock_price(code)
+        # self.changeTab(2)
+        self.drawStockInfoSheet(code)
 
     # def fldKeyword_on_changed(self, sKeyword):
     def btnSearch_on_clicked(self, checked):
-        gbox = self.findChild(QGroupBox, 'gboxStockInfoList')
-
         # find vbox previous defined
         vbox = self.findChild(QVBoxLayout, 'vboxStockInfoList')
         if vbox is None:
@@ -201,10 +202,10 @@ class Fantastic4(QWidget):
         df_code_list = stock_code.getDataCodeName(sKeyword)
 
         # for code in df_code_list['code']:
-        for idx in range(0,12):  # count of button to create include empty
-            code = 'empty'
+        n_max_result = 10
+        for idx in range(0,n_max_result):  # count of button to create include empty
             wgt_new_stock_info = QPushButton()
-            wgt_new_stock_info.setFixedHeight(60)
+            wgt_new_stock_info.setFixedHeight(80)
 
             if idx < len(df_code_list['code']):
                 code = df_code_list['code'][idx]
@@ -218,10 +219,13 @@ class Fantastic4(QWidget):
                 wgt_new_stock_info.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
             vbox.addWidget(wgt_new_stock_info)
 
-        if len(df_code_list['code']) > 12 :
-            lblCodeListMore = QLabel('검색 결과는 최대 12개까지만 표시됩니다.')
-            vbox.addWidget(lblCodeListMore)
+        str_result_msg = '검색이 완료되었습니다.'
+        if len(df_code_list['code']) > n_max_result:
+            str_result_msg = '검색 결과는 최대 10개까지만 표시됩니다.'
+        lblCodeListMore = QLabel(str_result_msg)
+        vbox.addWidget(lblCodeListMore)
 
+        gbox = self.findChild(QGroupBox, 'gboxStockInfoList')
         gbox.setLayout(vbox)
         print('\n>> end draw stock info list\n')
 
@@ -229,12 +233,14 @@ class Fantastic4(QWidget):
     def initSuggests(self, wgtParent):
         print('종목현황')
 
-        lblAIintro = QLabel('종목 검색 후 선택하세요', wgtParent)
-        # lblAIintro = QLabel('AI가 추천하는 투자 종목', wgtParent)
-        fntAIintro = lblAIintro.font()
-        fntAIintro.setPointSize(16)
-        lblAIintro.setFont(fntAIintro)
-        lblAIintro.move(10,10)
+        self.drawStockInfoSheet('')
+
+        # lblAIintro = QLabel('종목 검색 후 선택하세요', wgtParent)
+        # # lblAIintro = QLabel('AI가 추천하는 투자 종목', wgtParent)
+        # fntAIintro = lblAIintro.font()
+        # fntAIintro.setPointSize(16)
+        # lblAIintro.setFont(fntAIintro)
+        # lblAIintro.move(10,10)
 
         ### test
         # self.changeTab(2)
@@ -262,31 +268,48 @@ class Fantastic4(QWidget):
         print('>> drawStockInfoSheet ' + code)
 
         tab3 = self.findChild(QWidget, 'tab3')
-        for child in tab3.children():
-            child.setParent(None)
+        vbox = self.findChild(QVBoxLayout, 'vboxStockInfoSheet')
+        if vbox is None:
+            # init vbox
+            vbox = QVBoxLayout()
+            vbox.setObjectName('vboxStockInfoSheet')
+        else:
+            # delete child widgets
+            for i in reversed(range(vbox.count())):
+                # vbox.itemAt(i).widget().deleteLater()
+                vbox.itemAt(i).widget().setParent(None)
+
+        if code == '':
+            lblAIintro = QLabel('종목 검색 후 선택하세요')
+            fntAIintro = lblAIintro.font()
+            fntAIintro.setPointSize(16)
+            lblAIintro.setFont(fntAIintro)
+            vbox.addWidget(lblAIintro, alignment=QtCore.Qt.AlignTop)
+            tab3.setLayout(vbox)
+            return
 
         dict_stock_info = server_main.get_stock_realtime_info(code)
         print(dict_stock_info)
 
+        # 종목
         wgtStockInfo = QWidget()
         self.drawStockInfoButton(dict_stock_info, wgtStockInfo)
 
+        # 종목차트
         wgtStockChart = QWidget()
+        wgtStockChart.setFixedHeight(400)
         server_main.drawchart_stock(code, wgtStockChart)
 
+        # 향후 예측
         wgtStockPredict = QWidget()
+        wgtStockPredict.setFixedHeight(400)
         server_main.drawStockPredict(code, wgtStockPredict)
 
-        grid = QGridLayout()
-        tab3.setLayout(grid)
+        vbox.addWidget(wgtStockInfo)
+        vbox.addWidget(wgtStockChart)
+        vbox.addWidget(wgtStockPredict)
 
-        grid.addWidget(QLabel('종목'), 0, 0)
-        grid.addWidget(QLabel('차트'), 1, 0)
-        grid.addWidget(QLabel('향후 6개월 예측'), 2, 0)
-
-        grid.addWidget(wgtStockInfo, 0, 1)
-        grid.addWidget(wgtStockChart, 1, 1)
-        grid.addWidget(wgtStockPredict, 2, 1)
+        tab3.setLayout(vbox)
 
     # resize image
     def getCroppedPixmap(self, sImagePath):
@@ -299,18 +322,19 @@ class Fantastic4(QWidget):
         tabMain.setCurrentIndex(nTabIdx)
 
     def tabMain_on_changed(self, nTabIdx):
-        sTabName = '(탭 이름)'
+        tabMain = self.findChild(QTabWidget, 'tabMain')
+        sTabName = tabMain.tabText(nTabIdx)
 
         # self.findChild(QTabWidget, 'tabMain')
-        if nTabIdx == 0:
+        # if nTabIdx == 0:
             # self.initMarketInfo(tabMain.widget(nTabIdx))
-            sTabName = '시장현황'
-        elif nTabIdx == 1:
+            # sTabName = '시장현황'
+        # elif nTabIdx == 1:
             # self.initStocks(tabMain.widget(nTabIdx))
-            sTabName = '종목검색'
-        elif nTabIdx == 2:
+            # sTabName = '종목검색'
+        # elif nTabIdx == 2:
             # self.initSuggests(tabMain.widget(nTabIdx))
-            sTabName = '종목현황'
+            # sTabName = '종목현황'
 
         lblTitle = self.findChild(QLabel, 'currentTitle')
         lblTitle.setText(sTabName)
