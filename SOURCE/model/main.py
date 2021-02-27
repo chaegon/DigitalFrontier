@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from tools import *
 from usage import *
 
+from os import path
+
 # file_name = '316140'
 col = ['Open', 'High', 'Low', 'Close','Volume']
 
@@ -18,18 +20,25 @@ if __name__ == "__main__":
     
     '''
 
-list_file_name = []
+list_stock_code = []
 
-if len(list_file_name) == 0:
+if len(list_stock_code) == 0:
     str_stock_code = input('Input Stock Code to Learning : ')
     if len(str_stock_code) != 6:
-        exit(0)
+        print('Input Value is wrong. Stock code length must be 6. Re-run this.')
+        exit(-1)
     else:
-        list_file_name.append(str_stock_code)
+        list_stock_code.append(str_stock_code)
 
-for file_name in list_file_name:
+for stock_code in list_stock_code:
+    str_data_file_path = data_path = r'../data/stock_price/' + stock_code + '.csv'
+    if path.isfile(str_data_file_path) is not True:
+        print('File not Exist ' + str_data_file_path)
+        # TODO: create data file and continue process
+        exit(-1)
+
     print('>>> Learning')
-    run(seq_len=30, number=file_name, learning=True)
+    run(seq_len=30, number=stock_code, learning=True)
 
     print('>>> Prediction')
-    run(seq_len=30, number=file_name, learning=False)
+    run(seq_len=30, number=stock_code, learning=False)
