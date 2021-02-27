@@ -38,16 +38,31 @@ if __name__ == '__main__':
 
 
 # ../data/Stock_Pirce.csv 파일 생성
-def create_stock_price():
+def create_stock_price(stock_code):
+    print('create_stock_price ' + stock_code)
+
     conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
-    query = "SELECT * FROM STOCK_PRICE"
+    query = '''
+        SELECT
+              *
+          FROM STOCK_PRICE
+         WHERE Code = '{stock_code}'         
+        '''.format(stock_code=stock_code)
+
+    print(query)
 
     result = cur.execute(query)
     cols = [column[0] for column in result.description]
 
     stock_price_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
-    stock_price_df.to_csv('../data/Stock_Price.csv', mode='w', index = None)
+    if len(stock_price_df) > 0:
+        # 저장파일 경로,명 변경 : data/stock_price/(종목코드).csv
+        str_save_file_path = dirpath + 'data/stock_price/'+stock_code+'.csv'
+        print('(stock_code).csv path : ' + str_save_file_path)
+        stock_price_df.to_csv(str_save_file_path, mode='w', index = None)
+    else:
+        print('No Price Infomation about ' + stock_code)
 
     # commit 및 종료
     conn.commit()
