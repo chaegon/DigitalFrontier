@@ -9,9 +9,8 @@ import json
 import FinanceDataReader as fdr
 import sqlite3
 import pandas_datareader.data as web
-import pandas as pd
 
-from PyQt5.QtWidgets import QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from os import path
 
@@ -30,11 +29,11 @@ elif platform.system() == 'Windows':
 import matplotlib.ticker as ticker
 from mplfinance.original_flavor import candlestick2_ohlc
 
-dbpath = './server/DIGITALFRONTIER.db'
-dirpath = './'
+dbpath = r'./server/DIGITALFRONTIER.db'
+dirpath = r'./'
 if __name__ == '__main__':
-    dbpath = './DIGITALFRONTIER.db'
-    dirpath = '../'
+    dbpath = r'./DIGITALFRONTIER.db'
+    dirpath = r'../'
 
 
 # ../data/Stock_Pirce.csv 파일 생성
@@ -89,7 +88,7 @@ def drawchart_stock(code, wgtParent):
     stock_df['Date2'] = pd.to_datetime(stock_df['Date'])
 
     # 차트 그리기
-    fig = plt.figure(figsize=(20, 10))
+    fig = plt.figure()
     ax = fig.add_subplot(111)
 
     day_list = []
@@ -140,22 +139,37 @@ def drawchart_stock(code, wgtParent):
 
 # 종목 예측 차트 그리기
 def drawStockPredict(code, wgtParent):
-    str_pred_file_path = dirpath + 'data/' + code + '_pred.csv'
-    if path.isfile(str_pred_file_path) is True:
-        print('>> Prediction file: ' + str_pred_file_path)
+    btn_stat_pred = None
+
+    n_stat_pred = getPredictDataStatus(code)
+    if n_stat_pred == 100:
+        print('>> Predict Result Ready : ' + code)
+
+    elif n_stat_pred < 0 and n_stat_pred < 100:
+        btn_stat_pred = QPushButton('AI 학습 진행중입니다 ('+str(n_stat_pred)+')\n(새로고침)', wgtParent)
     else:
-        QLabel('예측 정보가 존재하지 않습니다.', wgtParent)
+        btn_stat_pred = QPushButton('예측 정보가 존재하지 않습니다.\n(분석시작)', wgtParent)
+
+    if btn_stat_pred is not None:
+        btn_stat_pred.move(100,0)
+        btn_stat_pred.resize(wgtParent.width(), wgtParent.height())
         return
 
+    print('drawStockPredict')
+    str_pred_file_path = dirpath + 'data/predict/' + code + '_pred.csv'
     df_pred = pd.read_csv(str_pred_file_path, names=['index','date','price'], header=0)
+    df_pred['date']  = df_pred['date'].apply(lambda x: x[5:])
+    df_pred['price'] = df_pred['price'].apply(lambda x: int(float(x[1:-1])))
     print(df_pred)
 
     # 차트 그리기
-    fig = plt.figure(figsize=(18, 10))
-    # ax = fig.add_subplot(111)
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.set_title('향후예측')
 
     plt.ylabel('주가')
     plt.xlabel('일자')
+    plt.xticks(rotation=45)
 
     plt.plot(df_pred['date'], df_pred['price'])
     plt.grid()
@@ -167,6 +181,27 @@ def drawStockPredict(code, wgtParent):
         vbxIndexes = QVBoxLayout(wgtParent)
         vbxIndexes.addWidget(canvas)
         canvas.draw()
+
+
+def getPredictDataStatus(code):
+    print('>>> getPredictDataStatus')
+
+    str_pred_file_path = dirpath + 'data/predict/' + code + '_pred.csv'
+    str_learn_stat_file_path = dirpath + 'freezing/' + code + '_learning.info'
+
+
+    if path.isfile(str_pred_file_path) is True:
+        print('>> Prediction file: ' + str_pred_file_path)
+        return 100
+    elif path.isfile(str_learn_stat_file_path) is True:
+        print('>> Learning file: ' + str_pred_file_path)
+        f = open(str_learn_stat_file_path, 'r')
+        str_learn_stat = f.read()
+        print('>> Learning Status: ' + str_learn_stat)
+        f.close()
+        return int(str_learn_stat)
+
+    return 0
 
 
 def change_name_to_code(name):
