@@ -8,9 +8,12 @@ from tools import *
 import matplotlib.pyplot as plt
 
 # 076610
+dirpath = r'./'
+if __name__ == '__main__':
+    dirpath = r'../'
 
 
-def run(seq_len = 1, number =  'AIStock', learning = True) :
+def run(seq_len=1, number='AIStock', learning=True):
     batch_size = 1
 
     d_k = 256
@@ -18,16 +21,17 @@ def run(seq_len = 1, number =  'AIStock', learning = True) :
     n_heads = 12
     ff_dim = 256
 
-    data_path = r'../data/stock_price/' + number + '.csv'
-    pred_path = r'../data/predict/' + number + '_pred.csv'
-    normal_path = r'../data/normal/' + number + '_normal.csv'
+    data_path = dirpath + 'data/stock_price/' + number + '.csv'
+    pred_path = dirpath + 'data/predict/' + number + '_pred.csv'
+    normal_path = dirpath + 'data/normal/' + number + '_normal.csv'
 
-    save_path = r'../freezing/' + number + '.hdf5'
+    path_status = dirpath + 'freezing/' + number + '_learning.info'
+    save_path = dirpath + 'freezing/' + number + '.hdf5'
 
-    structure_origin = r'../images/' + number + '_origin.png'
-    structure_dataset = r'../images/' + number + '_dataset.png'
-    structure_pred = r'../images/' + number + '_pred.png'
-    structure_model = r'../images/' + number + '_model.png'
+    structure_origin = dirpath + 'images/' + number + '_origin.png'
+    structure_dataset = dirpath + 'images/' + number + '_dataset.png'
+    structure_pred = dirpath + 'images/' + number + '_pred.png'
+    structure_model = dirpath + 'images/' + number + '_model.png'
     col = ['Open', 'High', 'Low', 'Close', 'Volume']
 
     data = read_data(data_path)
@@ -65,7 +69,8 @@ def run(seq_len = 1, number =  'AIStock', learning = True) :
 
     test_set = generate_pred_data(normal[col], seq_len)
     print(test_set.shape)
-    if learning :
+
+    if learning:
 
         # my_devices = tf.config.experimental.list_physical_devices(device_type='CPU')
         # tf.config.experimental.set_visible_devices(devices=my_devices, device_type='CPU')
@@ -115,18 +120,16 @@ def run(seq_len = 1, number =  'AIStock', learning = True) :
 
         history = model.fit(x_train, y_train,
                             batch_size=batch_size,
-                            epochs=35,
+                            epochs=10,
                             callbacks=[callback],
                             validation_data=(x_val, y_val))
-    else :
 
+    else:
         model = tf.keras.models.load_model(save_path,
                                            custom_objects={'Time2Vector': Time2Vector,
                                                            'SingleAttention': SingleAttention,
                                                            'MultiAttention': MultiAttention,
                                                            'TransformerEncoder': TransformerEncoder})
-
-
 
         print('It starts to predict ', test_set.shape)
         test_pred = model.predict(test_set)
