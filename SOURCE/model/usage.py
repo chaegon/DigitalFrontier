@@ -8,12 +8,9 @@ from tools import *
 import matplotlib.pyplot as plt
 
 # 076610
-dirpath = r'./'
-if __name__ == '__main__':
-    dirpath = r'../'
 
 
-def run(seq_len=1, number='AIStock', learning=True):
+def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
     batch_size = 1
 
     d_k = 256
@@ -21,18 +18,20 @@ def run(seq_len=1, number='AIStock', learning=True):
     n_heads = 12
     ff_dim = 256
 
-    data_path = dirpath + 'data/stock_price/' + number + '.csv'
-    pred_path = dirpath + 'data/predict/' + number + '_pred.csv'
-    normal_path = dirpath + 'data/normal/' + number + '_normal.csv'
+    data_path = dir_path + 'data/stock_price/' + number + '.csv'
+    pred_path = dir_path + 'data/predict/' + number + '_pred.csv'
+    normal_path = dir_path + 'data/normal/' + number + '_normal.csv'
 
-    path_status = dirpath + 'freezing/' + number + '_learning.info'
-    save_path = dirpath + 'freezing/' + number + '.hdf5'
+    path_status = dir_path + 'freezing/' + number + '_learn.ing'
+    save_path = dir_path + 'freezing/' + number + '.hdf5'
 
-    structure_origin = dirpath + 'images/' + number + '_origin.png'
-    structure_dataset = dirpath + 'images/' + number + '_dataset.png'
-    structure_pred = dirpath + 'images/' + number + '_pred.png'
-    structure_model = dirpath + 'images/' + number + '_model.png'
+    structure_origin = dir_path + 'images/' + number + '_origin.png'
+    structure_dataset = dir_path + 'images/' + number + '_dataset.png'
+    structure_pred = dir_path + 'images/' + number + '_pred.png'
+    structure_model = dir_path + 'images/' + number + '_model.png'
     col = ['Open', 'High', 'Low', 'Close', 'Volume']
+
+    write_run_status(path_status, 0)
 
     data = read_data(data_path)
     '''
@@ -55,7 +54,6 @@ def run(seq_len=1, number='AIStock', learning=True):
     price_min = price_min / 5
     price_max = price_max / 5
     price_gap = price_gap / 5
-
 
     df_train, train_data, df_val, val_data, df_test, test_data = split_dataset(normal, col)
 
@@ -125,6 +123,8 @@ def run(seq_len=1, number='AIStock', learning=True):
                             validation_data=(x_val, y_val))
 
     else:
+        write_run_status(path_status, 99)
+
         model = tf.keras.models.load_model(save_path,
                                            custom_objects={'Time2Vector': Time2Vector,
                                                            'SingleAttention': SingleAttention,
@@ -146,8 +146,17 @@ def run(seq_len=1, number='AIStock', learning=True):
         df_pred_test['Date'] = pd.DatetimeIndex(normal['Date'][-seq_len:]) + timedelta(days=seq_len)
         df_pred_test['Price'] = inverse_preprocessing(test_pred, gap = int(price_gap), min_price=int(price_min))
 
-
         df_pred_test.to_csv(pred_path)
         print('prediction is saved successfully')
         # visualization(df_pred_test, save_path=structure_pred, y_label='Prediction Price', name='Predict')
 
+
+# n_run_stat
+#    0 : run get to start
+# 1~98 : learning
+#   99 : predicting
+#  100 : (not use)
+def write_run_status(str_target_file, n_run_stat):
+    f_learning = open(str_target_file, 'w+')
+    f_learning.write(str(n_run_stat))
+    f_learning.close()
