@@ -40,6 +40,11 @@ if __name__ == '__main__':
 def create_stock_price(stock_code):
     print('create_stock_price ' + stock_code)
 
+    # 저장파일 경로,명 변경 : data/stock_price/(종목코드).csv
+    str_save_file_path = dirpath + 'data/stock_price/'+stock_code+'.csv'
+    if path.isfile(str_save_file_path):
+        return print('file already exists : ' + str_save_file_path)
+
     conn = sqlite3.connect(dbpath, isolation_level=None)
     cur = conn.cursor()
     query = '''
@@ -56,10 +61,8 @@ def create_stock_price(stock_code):
 
     stock_price_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
     if len(stock_price_df) > 0:
-        # 저장파일 경로,명 변경 : data/stock_price/(종목코드).csv
-        str_save_file_path = dirpath + 'data/stock_price/'+stock_code+'.csv'
         print('(stock_code).csv path : ' + str_save_file_path)
-        stock_price_df.to_csv(str_save_file_path, mode='w', index = None)
+        stock_price_df.to_csv(str_save_file_path, mode='w', index=False)
     else:
         print('No Price Infomation about ' + stock_code)
 
@@ -87,6 +90,8 @@ def drawchart_stock(code, wgtParent):
     stock_df = pd.DataFrame.from_records(data=result.fetchall(), columns=cols)
     stock_df['Date2'] = pd.to_datetime(stock_df['Date'])
 
+    print(stock_df)
+
     # 차트 그리기
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -94,18 +99,22 @@ def drawchart_stock(code, wgtParent):
     day_list = []
     name_list = []
 
-    for i, day in enumerate(stock_df.Date2):
-        if day.dayofweek == datetime.datetime.today().weekday():
-            day_list.append(i)
-            name_list.append(day.strftime('%m-%d'))
+    for i, day in enumerate(stock_df['Date2']):
+        print('[{}] {}'.format(i, day))
+        # if day.dayofweek == datetime.datetime.today().weekday():
+        day_list.append(i)
+        name_list.append(day.strftime('%m-%d'))
+
+    print(pd.DataFrame([day_list, name_list]))
 
     # X축 날짜 표시
     ax.xaxis.set_major_locator(ticker.FixedLocator(day_list))
     ax.xaxis.set_major_formatter(ticker.FixedFormatter(name_list))
+    plt.xticks(rotation=45)
 
     # 그래프 title과 축 이름 지정
     ax.set_title(stock_df['Name'].unique()[0], fontsize=22)
-    ax.set_xlabel('Date')
+    # ax.set_xlabel('Date')
 
     # 캔들차트 그리기
     candlestick2_ohlc(ax, stock_df['Open'], stock_df['High'],
@@ -139,23 +148,32 @@ def drawchart_stock(code, wgtParent):
 
 # 종목 예측 차트 그리기
 def drawStockPredict(code, wgtParent):
+    print('>>> drawStockPredict : {}'.format(code))
     btn_stat_pred = None
 
     n_stat_pred = getPredictDataStatus(code)
+    print('>> Predict Status {}'.format(n_stat_pred))
+
     if n_stat_pred == 100:
         print('>> Predict Result Ready : ' + code)
 
-    elif n_stat_pred < 0 and n_stat_pred < 100:
-        btn_stat_pred = QPushButton('AI 학습 진행중입니다 ('+str(n_stat_pred)+')\n(새로고침)', wgtParent)
+    elif 0 < n_stat_pred < 100 :
+        str_msg = str('AI 분석 진행중입니다\n{} %'.format(n_stat_pred))
+        print('>> Predict Processing: ' + str_msg)
+        btn_stat_pred = QPushButton(str_msg, wgtParent)
     else:
-        btn_stat_pred = QPushButton('예측 정보가 존재하지 않습니다.\n(분석시작)', wgtParent)
+        print('>> Predict Status Not Exist')
+        str_msg = '예측 정보가 존재하지 않습니다.\n(분석시작)'
+        btn_stat_pred = QPushButton(str_msg, wgtParent)
 
+    # if pred data not exist
     if btn_stat_pred is not None:
+        print('>> resize predict data not exist')
         btn_stat_pred.move(100,0)
         btn_stat_pred.resize(wgtParent.width(), wgtParent.height())
+        btn_stat_pred.setStyleSheet('font: 24px "Malgun Gothic"; font-weight: bold;')
         return
 
-    print('drawStockPredict')
     str_pred_file_path = dirpath + 'data/predict/' + code + '_pred.csv'
     df_pred = pd.read_csv(str_pred_file_path, names=['index','date','price'], header=0)
     df_pred['date']  = df_pred['date'].apply(lambda x: x[5:])
@@ -187,14 +205,13 @@ def getPredictDataStatus(code):
     print('>>> getPredictDataStatus')
 
     str_pred_file_path = dirpath + 'data/predict/' + code + '_pred.csv'
-    str_learn_stat_file_path = dirpath + 'freezing/' + code + '_learning.info'
-
+    str_learn_stat_file_path = dirpath + 'freezing/' + code + '_learn.ing'
 
     if path.isfile(str_pred_file_path) is True:
         print('>> Prediction file: ' + str_pred_file_path)
         return 100
     elif path.isfile(str_learn_stat_file_path) is True:
-        print('>> Learning file: ' + str_pred_file_path)
+        print('>> Learning file  : ' + str_learn_stat_file_path)
         f = open(str_learn_stat_file_path, 'r')
         str_learn_stat = f.read()
         print('>> Learning Status: ' + str_learn_stat)
