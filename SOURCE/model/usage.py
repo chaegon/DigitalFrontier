@@ -4,19 +4,37 @@ from datetime import datetime, timedelta
 
 from tools import *
 
-
 import matplotlib.pyplot as plt
+import os
+
 
 # 076610
 
 
 def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
-    batch_size = 1
 
-    d_k = 256
-    d_v = 256
-    n_heads = 12
-    ff_dim = 256
+    # n_run_stat
+    #    0 : run get to start
+    # 1~98 : learning
+    #   99 : predicting
+    #  100 : (delete status file)
+    def write_run_status(n_run_stat):
+        if n_run_stat == 100:
+            os.remove(path_status)
+            return
+        else:
+            f_learning = open(path_status, 'w+')
+            f_learning.write(str(n_run_stat))
+            print('> update learn.ing progress {} in {}'.format(n_run_stat, path_status))
+            f_learning.close()
+
+    class CheckEpochEnd(tf.keras.callbacks.Callback):
+        def on_epoch_end(self, epoch, logs=None):
+            epoch_cnt = epoch + 1
+            print('> epoch [{}/{}] end'.format(epoch_cnt, epoch_size))
+            write_run_status(int(epoch_cnt/epoch_size*99))
+
+    # end pre definition in [run]
 
     data_path = dir_path + 'data/stock_price/' + number + '.csv'
     pred_path = dir_path + 'data/predict/' + number + '_pred.csv'
@@ -31,7 +49,7 @@ def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
     structure_model = dir_path + 'images/' + number + '_model.png'
     col = ['Open', 'High', 'Low', 'Close', 'Volume']
 
-    write_run_status(path_status, 0)
+    write_run_status(0)
 
     data = read_data(data_path)
     '''
@@ -80,9 +98,9 @@ def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
         # '''
         stock = price_mean(data, col)
 
-        visualization(stock, save_path= structure_origin, name='Preprocessing')
+        visualization(stock, save_path=structure_origin, name='Preprocessing')
         # normal, max_num, min_num, gap = preprocessing(stock)
-        #normal.head()
+        # normal.head()
         # visualization(normal, save_path= structure_normal, y_label='Normal Price', name='normal')
         #
 
@@ -94,11 +112,9 @@ def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
 
         # visualization_dataset(train_stock,vali_stock, test_stock, save_path= structure_dataset, name = 'splite')
 
-
         # print('Training set shape', x_train.shape, y_train.shape)
         # print('Validation set shape', x_val.shape, y_val.shape)
         # print('Testing set shape', x_test.shape, y_test.shape)
-
 
         '''
         gpu 셋팅
@@ -109,21 +125,32 @@ def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
         '''
         모델 생성
         '''
-        model = create_model(d_k,d_v,n_heads, ff_dim, seq_len)
+        batch_size = 1
+        epoch_size = 10
+
+        d_k = 256
+        d_v = 256
+        n_heads = 12
+        ff_dim = 256
+
+        model = create_model(d_k, d_v, n_heads, ff_dim, seq_len)
         model.summary()
 
         callback = tf.keras.callbacks.ModelCheckpoint(save_path,
                                                       monitor='val_loss',
                                                       save_best_only=True, verbose=1)
+        checkEpochEnd = CheckEpochEnd()
 
         history = model.fit(x_train, y_train,
                             batch_size=batch_size,
-                            epochs=10,
-                            callbacks=[callback],
+                            epochs=epoch_size,
+                            callbacks=[callback,
+                                       checkEpochEnd
+                                       ],
                             validation_data=(x_val, y_val))
 
     else:
-        write_run_status(path_status, 99)
+        write_run_status(99)
 
         model = tf.keras.models.load_model(save_path,
                                            custom_objects={'Time2Vector': Time2Vector,
@@ -144,19 +171,10 @@ def run(seq_len=1, number='AIStock', learning=True, dir_path=r'../'):
             dpi=96, )
         df_pred_test = pd.DataFrame()
         df_pred_test['Date'] = pd.DatetimeIndex(normal['Date'][-seq_len:]) + timedelta(days=seq_len)
-        df_pred_test['Price'] = inverse_preprocessing(test_pred, gap = int(price_gap), min_price=int(price_min))
+        df_pred_test['Price'] = inverse_preprocessing(test_pred, gap=int(price_gap), min_price=int(price_min))
 
         df_pred_test.to_csv(pred_path)
         print('prediction is saved successfully')
         # visualization(df_pred_test, save_path=structure_pred, y_label='Prediction Price', name='Predict')
 
-
-# n_run_stat
-#    0 : run get to start
-# 1~98 : learning
-#   99 : predicting
-#  100 : (not use)
-def write_run_status(str_target_file, n_run_stat):
-    f_learning = open(str_target_file, 'w+')
-    f_learning.write(str(n_run_stat))
-    f_learning.close()
+        write_run_status(100)
